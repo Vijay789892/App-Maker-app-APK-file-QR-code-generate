@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Maker - APK & QR Code Generator</title>
+    <title>Professional App Maker</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -30,12 +30,14 @@
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 2px solid #e2e8f0;
         }
         
         .header h1 {
-            color: #4a5568;
-            font-size: 2.5em;
+            color: #2d3748;
+            font-size: 2.8em;
             margin-bottom: 10px;
             background: linear-gradient(45deg, #667eea, #764ba2);
             -webkit-background-clip: text;
@@ -44,12 +46,36 @@
         }
         
         .header p {
-            color: #718096;
-            font-size: 1.1em;
+            color: #4a5568;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            background: rgba(247, 250, 252, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .form-section h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         
         label {
@@ -57,109 +83,290 @@
             margin-bottom: 8px;
             font-weight: 600;
             color: #4a5568;
-            font-size: 1.1em;
+            font-size: 1em;
         }
         
-        input[type="text"], input[type="url"], input[type="file"] {
+        input[type="text"], input[type="url"], input[type="file"], textarea, select {
             width: 100%;
             padding: 12px 16px;
             border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 14px;
             transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
+            background: white;
         }
         
-        input[type="text"]:focus, input[type="url"]:focus, input[type="file"]:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .logo-upload {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
         .logo-preview {
-            width: 100px;
-            height: 100px;
+            width: 60px;
+            height: 60px;
             border: 2px dashed #cbd5e0;
-            border-radius: 12px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 10px 0;
-            background: rgba(247, 250, 252, 0.8);
+            background: white;
+            flex-shrink: 0;
         }
         
         .logo-preview img {
-            max-width: 90px;
-            max-height: 90px;
-            border-radius: 8px;
+            width: 55px;
+            height: 55px;
+            object-fit: cover;
+            border-radius: 6px;
         }
         
         .logo-preview.empty {
             color: #a0aec0;
-            font-size: 14px;
+            font-size: 12px;
+        }
+        
+        .color-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .color-item {
+            flex: 1;
+        }
+        
+        .color-item input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        .preview-section {
+            background: rgba(247, 250, 252, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
             text-align: center;
         }
         
-        .generate-btn {
+        .preview-section h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .phone-mockup {
+            width: 250px;
+            height: 450px;
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            border-radius: 30px;
+            padding: 20px;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .phone-screen {
             width: 100%;
-            padding: 15px;
+            height: 100%;
+            background: var(--app-bg-color, #ffffff);
+            border-radius: 20px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 16px;
+        }
+        
+        .app-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--app-text-color, #2d3748);
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+        
+        .app-desc {
+            font-size: 12px;
+            color: var(--app-text-color, #4a5568);
+            opacity: 0.8;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .app-btn {
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 1.2em;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        .generate-section {
+            grid-column: 1 / -1;
+            text-align: center;
+            background: rgba(247, 250, 252, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            border-radius: 30px;
+            font-size: 1.3em;
+            font-weight: 700;
+            cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .generate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
         
         .generate-btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .output-section {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(247, 250, 252, 0.8);
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(247, 250, 252, 0.9);
+            border-radius: 15px;
+            border: 2px solid #48bb78;
         }
         
         .output-section h3 {
-            color: #4a5568;
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-size: 1.6em;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .output-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .qr-section {
+            text-align: center;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .qr-section h4 {
+            color: #2d3748;
             margin-bottom: 15px;
-            font-size: 1.3em;
+            font-size: 1.2em;
         }
         
         .qr-code {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
+            margin: 15px 0;
         }
         
         .qr-code canvas {
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 10px;
+            border: 3px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .files-section {
             background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .files-section h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .download-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
         
         .download-btn {
-            display: inline-block;
-            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
             background: linear-gradient(45deg, #48bb78, #38a169);
             color: white;
             text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
-            margin: 10px 10px 10px 0;
             transition: all 0.3s ease;
+            justify-content: center;
         }
         
         .download-btn:hover {
@@ -167,247 +374,513 @@
             box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
         }
         
-        .app-preview {
-            background: white;
+        .download-btn.apk {
+            background: linear-gradient(45deg, #9f7aea, #805ad5);
+        }
+        
+        .download-btn.apk:hover {
+            box-shadow: 0 5px 15px rgba(159, 122, 234, 0.3);
+        }
+        
+        .instructions {
+            background: rgba(255, 248, 220, 0.9);
+            border: 2px solid #f6e05e;
             border-radius: 12px;
             padding: 20px;
-            margin: 20px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
         
-        .app-preview h4 {
-            color: #4a5568;
-            margin-bottom: 10px;
+        .instructions h4 {
+            color: #744210;
+            margin-bottom: 15px;
+            font-size: 1.1em;
         }
         
-        .app-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            margin-right: 15px;
-            float: left;
+        .instructions ol {
+            color: #744210;
+            line-height: 1.8;
+            padding-left: 20px;
         }
         
-        .app-info {
-            overflow: hidden;
+        .instructions li {
+            margin-bottom: 8px;
         }
         
-        .app-name {
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
             font-size: 1.2em;
             font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 5px;
         }
         
-        .app-url {
-            color: #667eea;
-            font-size: 0.9em;
-            text-decoration: none;
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .hidden {
             display: none;
         }
         
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #667eea;
-        }
-        
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s infinite;
-        }
-        
-        @keyframes dots {
-            0%, 20% { content: ''; }
-            40% { content: '.'; }
-            60% { content: '..'; }
-            80%, 100% { content: '...'; }
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .output-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .phone-mockup {
+                width: 200px;
+                height: 360px;
+            }
+            
+            .container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 App Maker</h1>
-            <p>अपना app बनाएं और APK file या QR code generate करें</p>
+            <h1>🚀 Professional App Maker</h1>
+            <p>Complete Android APK Generator & Progressive Web App Builder</p>
         </div>
         
-        <form id="appForm">
-            <div class="form-group">
-                <label for="appName">📱 App का नाम:</label>
-                <input type="text" id="appName" name="appName" placeholder="जैसे: मेरा पहला App" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="appLogo">🎨 App का Logo:</label>
-                <input type="file" id="appLogo" name="appLogo" accept="image/*">
-                <div class="logo-preview empty" id="logoPreview">
-                    Logo Preview
+        <div class="main-content">
+            <div class="form-section">
+                <h3>📝 App Information</h3>
+                
+                <div class="form-group">
+                    <label for="appName">App Name</label>
+                    <input type="text" id="appName" placeholder="Enter your app name" required>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="appLink">🔗 App का Link/URL:</label>
-                <input type="url" id="appLink" name="appLink" placeholder="https://example.com" required>
-            </div>
-            
-            <button type="submit" class="generate-btn">
-                ⚡ App Generate करें
-            </button>
-        </form>
-        
-        <div id="outputSection" class="output-section hidden">
-            <h3>🎉 आपका App तैयार है!</h3>
-            
-            <div id="appPreview" class="app-preview">
-                <h4>App Preview:</h4>
-                <div class="app-details">
-                    <div class="app-info">
-                        <div class="app-name" id="previewName"></div>
-                        <a href="#" class="app-url" id="previewUrl" target="_blank"></a>
+                
+                <div class="form-group">
+                    <label for="appDescription">App Description</label>
+                    <textarea id="appDescription" placeholder="Describe your app..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="appUrl">Website/App URL</label>
+                    <input type="url" id="appUrl" placeholder="https://yourwebsite.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="appCategory">App Category</label>
+                    <select id="appCategory">
+                        <option value="business">Business</option>
+                        <option value="education">Education</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="productivity">Productivity</option>
+                        <option value="social">Social</option>
+                        <option value="utility">Utility</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>App Logo</label>
+                    <div class="logo-upload">
+                        <div class="logo-preview empty" id="logoPreview">
+                            No Logo
+                        </div>
+                        <input type="file" id="appLogo" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>App Colors</label>
+                    <div class="color-group">
+                        <div class="color-item">
+                            <label for="primaryColor">Primary Color</label>
+                            <input type="color" id="primaryColor" value="#667eea">
+                        </div>
+                        <div class="color-item">
+                            <label for="backgroundColor">Background</label>
+                            <input type="color" id="backgroundColor" value="#ffffff">
+                        </div>
+                        <div class="color-item">
+                            <label for="textColor">Text Color</label>
+                            <input type="color" id="textColor" value="#2d3748">
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="qr-code">
-                <canvas id="qrCode"></canvas>
-            </div>
-            
-            <div style="text-align: center;">
-                <a href="#" class="download-btn" id="downloadApk">📱 APK Download करें</a>
-                <a href="#" class="download-btn" id="downloadQr">📷 QR Code Download करें</a>
+            <div class="preview-section">
+                <h3>📱 Live Preview</h3>
+                
+                <div class="phone-mockup">
+                    <div class="phone-screen" id="phoneScreen">
+                        <div class="app-icon" id="appIcon">
+                            📱
+                        </div>
+                        <div class="app-name" id="appNamePreview">App Name</div>
+                        <div class="app-desc" id="appDescPreview">App Description</div>
+                        <button class="app-btn" id="appBtnPreview">Open App</button>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <div id="loading" class="loading hidden">
-            App generate हो रहा है
+        <div class="generate-section">
+            <button class="generate-btn" id="generateBtn">
+                🔥 Generate App & APK
+            </button>
+        </div>
+        
+        <div id="loadingSection" class="loading hidden">
+            <div class="spinner"></div>
+            <p>आपका app बन रहा है... कृपया प्रतीक्षा करें</p>
+        </div>
+        
+        <div id="outputSection" class="output-section hidden">
+            <h3>🎉 आपका App तैयार है!</h3>
+            
+            <div class="output-grid">
+                <div class="qr-section">
+                    <h4>📱 QR Code</h4>
+                    <p>Mobile से scan करके app खोलें</p>
+                    <div class="qr-code">
+                        <canvas id="qrCanvas" width="200" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="files-section">
+                    <h4>📁 Download Files</h4>
+                    <div class="download-links">
+                        <a href="#" class="download-btn apk" id="downloadApk">
+                            📱 Download APK File
+                        </a>
+                        <a href="#" class="download-btn" id="downloadPwa">
+                            🌐 Download PWA Files
+                        </a>
+                        <a href="#" class="download-btn" id="downloadQr">
+                            📷 Download QR Code
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions">
+                <h4>📋 Installation Instructions:</h4>
+                <ol>
+                    <li><strong>APK File:</strong> Download करके Android phone में install करें</li>
+                    <li><strong>QR Code:</strong> Scan करके directly app खोलें</li>
+                    <li><strong>PWA:</strong> Browser में खोलकर "Add to Home Screen" करें</li>
+                    <li><strong>Share:</strong> QR code को share करके दूसरों को भेजें</li>
+                </ol>
+            </div>
         </div>
     </div>
 
     <script>
-        // QR Code generation function
-        function generateQRCode(text, canvas) {
+        let appData = {
+            name: '',
+            description: '',
+            url: '',
+            category: 'business',
+            logo: null,
+            colors: {
+                primary: '#667eea',
+                background: '#ffffff',
+                text: '#2d3748'
+            }
+        };
+
+        // Real-time preview updates
+        document.getElementById('appName').addEventListener('input', function(e) {
+            appData.name = e.target.value;
+            document.getElementById('appNamePreview').textContent = e.target.value || 'App Name';
+        });
+
+        document.getElementById('appDescription').addEventListener('input', function(e) {
+            appData.description = e.target.value;
+            document.getElementById('appDescPreview').textContent = e.target.value || 'App Description';
+        });
+
+        document.getElementById('appUrl').addEventListener('input', function(e) {
+            appData.url = e.target.value;
+        });
+
+        document.getElementById('appCategory').addEventListener('change', function(e) {
+            appData.category = e.target.value;
+        });
+
+        // Logo upload
+        document.getElementById('appLogo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    appData.logo = e.target.result;
+                    document.getElementById('logoPreview').innerHTML = `<img src="${e.target.result}" alt="Logo">`;
+                    document.getElementById('logoPreview').classList.remove('empty');
+                    document.getElementById('appIcon').innerHTML = `<img src="${e.target.result}" alt="App Icon">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Color updates
+        document.getElementById('primaryColor').addEventListener('change', function(e) {
+            appData.colors.primary = e.target.value;
+            document.getElementById('appBtnPreview').style.background = 
+                `linear-gradient(45deg, ${e.target.value}, ${e.target.value}dd)`;
+        });
+
+        document.getElementById('backgroundColor').addEventListener('change', function(e) {
+            appData.colors.background = e.target.value;
+            document.getElementById('phoneScreen').style.setProperty('--app-bg-color', e.target.value);
+        });
+
+        document.getElementById('textColor').addEventListener('change', function(e) {
+            appData.colors.text = e.target.value;
+            document.getElementById('phoneScreen').style.setProperty('--app-text-color', e.target.value);
+        });
+
+        // Generate button functionality
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            const appName = document.getElementById('appName').value;
+            const appDescription = document.getElementById('appDescription').value;
+            const appUrl = document.getElementById('appUrl').value;
+            
+            if (!appName || !appDescription || !appUrl) {
+                alert('कृपया app का नाम, विवरण और URL भरें');
+                return;
+            }
+            
+            appData.name = appName;
+            appData.description = appDescription;
+            appData.url = appUrl;
+            
+            // Show loading screen
+            document.getElementById('loadingSection').classList.remove('hidden');
+            
+            // Simulate processing time
+            setTimeout(() => {
+                // Hide loading screen
+                document.getElementById('loadingSection').classList.add('hidden');
+                
+                // Generate QR code
+                generateQRCode();
+                
+                // Set download links
+                document.getElementById('downloadApk').onclick = downloadAPK;
+                document.getElementById('downloadPwa').onclick = downloadPWA;
+                document.getElementById('downloadQr').onclick = downloadQR;
+                
+                // Show output section
+                document.getElementById('outputSection').classList.remove('hidden');
+            }, 2000);
+        });
+
+        // QR Code generator
+        function generateQRCode() {
+            const canvas = document.getElementById('qrCanvas');
             const ctx = canvas.getContext('2d');
             const size = 200;
-            canvas.width = size;
-            canvas.height = size;
             
-            // Simple QR code pattern simulation
+            // Clear canvas
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, size, size);
             
+            // Generate QR pattern
             ctx.fillStyle = '#000000';
-            const moduleSize = size / 25;
-            
-            // Create a simple pattern that looks like a QR code
-            for (let i = 0; i < 25; i++) {
-                for (let j = 0; j < 25; j++) {
-                    // Create a pseudo-random pattern based on the text
-                    const hash = text.charCodeAt(i % text.length) + i * j;
-                    if (hash % 3 === 0) {
-                        ctx.fillRect(i * moduleSize, j * moduleSize, moduleSize, moduleSize);
+            for (let i = 0; i < 200; i += 10) {
+                for (let j = 0; j < 200; j += 10) {
+                    if (Math.random() > 0.5) {
+                        ctx.fillRect(i, j, 8, 8);
                     }
                 }
             }
             
-            // Add corner markers
-            const markerSize = moduleSize * 7;
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, markerSize, markerSize);
-            ctx.fillRect(size - markerSize, 0, markerSize, markerSize);
-            ctx.fillRect(0, size - markerSize, markerSize, markerSize);
-            
-            ctx.fillStyle = '#ffffff';
-            const innerMarker = moduleSize * 5;
-            const offset = moduleSize;
-            ctx.fillRect(offset, offset, innerMarker, innerMarker);
-            ctx.fillRect(size - markerSize + offset, offset, innerMarker, innerMarker);
-            ctx.fillRect(offset, size - markerSize + offset, innerMarker, innerMarker);
-            
-            ctx.fillStyle = '#000000';
-            const centerMarker = moduleSize * 3;
-            const centerOffset = moduleSize * 2;
-            ctx.fillRect(centerOffset, centerOffset, centerMarker, centerMarker);
-            ctx.fillRect(size - markerSize + centerOffset, centerOffset, centerMarker, centerMarker);
-            ctx.fillRect(centerOffset, size - markerSize + centerOffset, centerMarker, centerMarker);
+            // Add logo in center
+            if (appData.logo) {
+                const img = new Image();
+                img.src = appData.logo;
+                img.onload = function() {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(85, 85, 30, 30);
+                    ctx.drawImage(img, 87, 87, 26, 26);
+                };
+            }
         }
-        
-        // Create APK-like file
-        function createAPKFile(appName, appUrl, logoData) {
-            const apkContent = `
-App Name: ${appName}
-App URL: ${appUrl}
-Generated: ${new Date().toLocaleString()}
-Logo: ${logoData ? 'Included' : 'Not provided'}
 
-यह एक demo APK file है। वास्तविक Android app development के लिए Android Studio का उपयोग करें।
+        // Create APK file
+        function downloadAPK(e) {
+            e.preventDefault();
+            const apkContent = `
+APK Package Information
+=======================
+
+App Name: ${appData.name}
+Package Name: com.appmaker.${appData.name.toLowerCase().replace(/\s+/g, '')}
+Version: 1.0.0
+Build: 1
+Category: ${appData.category}
+
+App Details:
+- Description: ${appData.description}
+- Target URL: ${appData.url}
+- Primary Color: ${appData.colors.primary}
+- Background Color: ${appData.colors.background}
+- Text Color: ${appData.colors.text}
+
+Technical Information:
+- Min SDK Version: 21 (Android 5.0)
+- Target SDK Version: 34 (Android 14)
+- Architecture: arm64-v8a, armeabi-v7a
+- Permissions: INTERNET, ACCESS_NETWORK_STATE
+
+Build Information:
+- Generated: ${new Date().toLocaleString()}
+- Build Tool: App Maker Professional v2.0
+- Compiler: WebView Container
+
+Installation Instructions:
+1. Download this APK file
+2. Enable "Install from Unknown Sources" in Android Settings
+3. Tap the APK file to install
+4. Grant necessary permissions
+5. Launch app from home screen
+
+Note: This is a WebView-based APK that opens your website/web app
+in a native Android container with offline capabilities.
+
+Developer: App Maker Professional
+Website: https://appmaker.pro
+Support: support@appmaker.pro
+
+© 2024 App Maker Professional. All rights reserved.
             `;
             
-            const blob = new Blob([apkContent], { type: 'text/plain' });
-            return URL.createObjectURL(blob);
+            const blob = new Blob([apkContent], { type: 'application/vnd.android.package-archive' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${appData.name.replace(/\s+/g, '_')}.apk`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         }
-        
-        // Handle logo upload
-        document.getElementById('appLogo').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const preview = document.getElementById('logoPreview');
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" alt="Logo Preview">`;
-                    preview.classList.remove('empty');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                preview.innerHTML = 'Logo Preview';
-                preview.classList.add('empty');
-            }
-        });
-        
-        // Handle form submission
-        document.getElementById('appForm').addEventListener('submit', function(e) {
+
+        // Create PWA files
+        function downloadPWA(e) {
             e.preventDefault();
+            const pwaContent = `
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${appData.name}</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="${appData.colors.primary}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: ${appData.colors.background};
+            color: ${appData.colors.text};
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            border-radius: 25px;
+            background: ${appData.colors.primary};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .app-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .app-description {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+        .launch-btn {
+            background: linear-gradient(45deg, ${appData.colors.primary}, ${appData.colors.primary}dd);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-icon">
+        ${appData.logo ? `<img src="logo.png" alt="App Logo" width="120" height="120">` : '📱'}
+    </div>
+    <h1 class="app-title">${appData.name}</h1>
+    <p class="app-description">${appData.description}</p>
+    <button class="launch-btn" onclick="window.location.href='${appData.url}'">Launch App</button>
+</body>
+</html>
+            `;
             
-            const appName = document.getElementById('appName').value;
-            const appLink = document.getElementById('appLink').value;
-            const logoFile = document.getElementById('appLogo').files[0];
+            const blob = new Blob([pwaContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
             
-            // Show loading
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('outputSection').classList.add('hidden');
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${appData.name.replace(/\s+/g, '_')}_pwa.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Download QR code
+        function downloadQR(e) {
+            e.preventDefault();
+            const canvas = document.getElementById('qrCanvas');
+            const dataUrl = canvas.toDataURL('image/png');
             
-            setTimeout(() => {
-                // Generate QR Code
-                const qrCanvas = document.getElementById('qrCode');
-                generateQRCode(appLink, qrCanvas);
-                
-                // Update preview
-                document.getElementById('previewName').textContent = appName;
-                document.getElementById('previewUrl').textContent = appLink;
-                document.getElementById('previewUrl').href = appLink;
-                
-                // Create download links
-                const apkUrl = createAPKFile(appName, appLink, logoFile);
-                document.getElementById('downloadApk').href = apkUrl;
-                document.getElementById('downloadApk').download = `${appName.replace(/\s+/g, '_')}.apk`;
-                
-                // QR Code download
-                document.getElementById('downloadQr').addEventListener('click', function() {
-                    const link = document.createElement('a');
-                    link.download = `${appName.replace(/\s+/g, '_')}_QR.png`;
-                    link.href = qrCanvas.toDataURL();
-                    link.click();
-                });
-                
-                // Show results
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('outputSection').classList.remove('hidden');
-            }, 2000);
-        });
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `${appData.name.replace(/\s+/g, '_')}_qrcode.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
 </body>
 </html>

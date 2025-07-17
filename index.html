@@ -2501,38 +2501,64 @@ margin: 0;
             return entry; // Return the created entry
         };
 
+        // --- IMPROVED PDF GENERATION FUNCTIONS ---
+
         // Function to generate and save PDF for a single history or favorite entry
         const generateSinglePdf = async (entry) => {
             stopSpeaking();
             const tempDiv = document.createElement('div');
-            tempDiv.style.fontFamily = 'Arial, sans-serif';
-            tempDiv.style.padding = '20px';
-            tempDiv.style.color = '#333';
-            tempDiv.style.lineHeight = '1.6';
-
+            
+            // Create the HTML content for the PDF with Google Fonts for better rendering
             tempDiv.innerHTML = `
-                <h2 style="color: #667eea; text-align: center; margin-bottom: 20px;">${APP_NAME}</h2>
-                <h3 style="color: #764ba2;">प्रश्न:</h3>
-                <p style="word-wrap: break-word;">${entry.question || (entry.imageUsed ? 'छवि-आधारित प्रश्न' : 'कोई प्रश्न नहीं')}</p>
-                <h3 style="color: #764ba2;">उत्तर:</h3>
-                <p style="word-wrap: break-word;">${entry.answer.replace(/\n/g, '<br>')}</p>
-                <small style="display: block; text-align: right; margin-top: 20px; color: #777;">तिथि: ${entry.timestamp}</small>
-                <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.8em; color: #999;">
-                    <p style="margin: 5px 0;">©${new Date().getFullYear()} ${APP_NAME}</p>
-                    <p style="margin: 5px 0;"><a href="${APP_URL}" target="_blank" style="color: #667eea; text-decoration: none;">किसी भी प्रकार के प्रश्न का 1 मिनट उत्तर पाये Ai से -यहाँ क्लिक करें</a></p>
-                </div>
+                <html>
+                <head>
+                    <link rel="preconnect" href="https://fonts.googleapis.com">
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+                    <style>
+                        body {
+                            font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+                            padding: 20px;
+                            color: #333;
+                            line-height: 1.6;
+                        }
+                        h2 { color: #667eea; text-align: center; margin-bottom: 20px; font-weight: 700; }
+                        h3 { color: #764ba2; font-weight: 700; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 20px; }
+                        p { word-wrap: break-word; white-space: pre-wrap; margin-left: 5px; }
+                        small { display: block; text-align: right; margin-top: 20px; color: #777; }
+                        .pdf-footer { margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.8em; color: #999; }
+                        a { color: #667eea; text-decoration: none; }
+                    </style>
+                </head>
+                <body>
+                    <h2>${APP_NAME}</h2>
+                    <h3>प्रश्न:</h3>
+                    <p>${entry.question || (entry.imageUsed ? 'छवि-आधारित प्रश्न' : 'कोई टेक्स्ट प्रश्न नहीं')}</p>
+                    <h3>उत्तर:</h3>
+                    <p>${entry.answer.replace(/\n/g, '<br>')}</p>
+                    <small>तिथि: ${entry.timestamp}</small>
+                    <div class="pdf-footer">
+                        <p>©${new Date().getFullYear()} ${APP_NAME}</p>
+                        <p><a href="${APP_URL}" target="_blank">किसी भी प्रकार के प्रश्न का 1 मिनट उत्तर पाये Ai से -यहाँ क्लिक करें</a></p>
+                    </div>
+                </body>
+                </html>
             `;
 
+            // Improved options for better text clarity
             const opt = {
                 margin: 0.5,
                 filename: `YADAV_Sir_AI_Solver_${entry.timestamp.replace(/[:\/,\s]/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, logging: false, dpi: 192, letterRendering: true, useCORS: true },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: 'avoid-all' }
+                image: { type: 'png', quality: 1.0 }, // Use PNG for lossless image
+                html2canvas: {
+                    scale: 3, // Higher scale for better resolution
+                    dpi: 300, // Print quality DPI
+                    letterRendering: true,
+                    useCORS: true
+                },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            // Determine which modal is active to show loading and restore
             const activeModal = historyModal.classList.contains('show') ? historyModal : (favoritesModal.classList.contains('show') ? favoritesModal : null);
             let originalContent = '';
             let restoreDisplayFunc = null;
@@ -2541,15 +2567,11 @@ margin: 0;
                 const modalContentElem = activeModal.querySelector('.modal-content');
                 originalContent = modalContentElem.innerHTML;
                 restoreDisplayFunc = activeModal === historyModal ? displayHistory : displayFavorites;
-
-                // Show loading state in active modal
                 modalContentElem.innerHTML = `
                     <div style="text-align: center; padding: 50px;">
                         <div class="loading" style="width: 40px; height: 40px; border-width: 5px; margin: 0 auto 20px;"></div>
-                        <p style="color: #667eea; font-size: 1.2em;">PDF तैयार हो रही है... कृपया प्रतीक्षा करें।</p>
-                    </div>
-                `;
-                // Disable all relevant buttons in modals
+                        <p style="color: #667eea; font-size: 1.2em;">हाई-क्वालिटी PDF तैयार हो रही है...</p>
+                    </div>`;
                 document.querySelectorAll('.single-pdf-btn, .history-speaker-btn').forEach(btn => btn.disabled = true);
             }
 
@@ -2561,9 +2583,8 @@ margin: 0;
                 alert('PDF जनरेशन में त्रुटि हुई। कृपया पुनः प्रयास करें।');
             } finally {
                 if (activeModal && restoreDisplayFunc) {
-                    // Restore original content and re-enable buttons
                     activeModal.querySelector('.modal-content').innerHTML = originalContent;
-                    restoreDisplayFunc(); // Re-render to re-attach event listeners and re-enable buttons
+                    restoreDisplayFunc();
                 }
             }
         };
@@ -3257,7 +3278,7 @@ margin: 0;
             historyModalContent.innerHTML = `
                 <div style="text-align: center; padding: 50px;">
                     <div class="loading" style="width: 40px; height: 40px; border-width: 5px; margin: 0 auto 20px; border-top-color: #667eea;"></div>
-                    <p style="color: #667eea; font-size: 1.2em;">PDF तैयार हो रही है... कृपया प्रतीक्षा करें। यह इतिहास की लंबाई के आधार पर कुछ समय ले सकता है।</p>
+                    <p style="color: #667eea; font-size: 1.2em;">हाई-क्वालिटी PDF तैयार हो रही है...</p>
                 </div>
             `;
             document.querySelectorAll('#historyModal button').forEach(btn => btn.disabled = true);
@@ -3267,25 +3288,32 @@ margin: 0;
                     const tempDiv = document.createElement('div');
                     
                     let historyContentHtml = `
-                        <style>
-                            body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.6; color: #333; }
-                            .pdf-history-item { 
-                                page-break-inside: avoid !important; 
-                                margin-bottom: 25px; 
-                                padding: 20px; 
-                                border: 1px solid #ddd; 
-                                border-radius: 10px; 
-                                background-color: #f9f9f9;
-                            }
-                            h1, h3 { color: #667eea; }
-                            h1 { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #764ba2; padding-bottom: 10px; }
-                            h3 { margin-top: 0; margin-bottom: 10px; color: #764ba2; }
-                            p { margin-top: 0; margin-bottom: 10px; word-wrap: break-word; white-space: pre-wrap; }
-                            small { display: block; text-align: right; color: #777; font-size: 0.8em; }
-                            .pdf-footer { text-align: center; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.8em; color: #999; }
-                            a { color: #667eea; text-decoration: none; }
-                        </style>
-                        <h1>${APP_NAME} - उत्तर इतिहास</h1>
+                        <html>
+                        <head>
+                            <link rel="preconnect" href="https://fonts.googleapis.com">
+                            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                            <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+                            <style>
+                                body { font-family: 'Noto Sans Devanagari', 'Arial', sans-serif; line-height: 1.6; color: #333; }
+                                .pdf-history-item { 
+                                    page-break-inside: avoid !important; 
+                                    margin-bottom: 25px; 
+                                    padding: 15px; 
+                                    border: 1px solid #ddd; 
+                                    border-radius: 10px; 
+                                    background-color: #f9f9f9;
+                                }
+                                h1, h3 { font-weight: 700; }
+                                h1 { text-align: center; margin-bottom: 30px; color: #667eea; border-bottom: 2px solid #764ba2; padding-bottom: 10px; }
+                                h3 { margin-top: 0; margin-bottom: 10px; color: #764ba2; }
+                                p { margin: 0; word-wrap: break-word; white-space: pre-wrap; }
+                                small { display: block; text-align: right; color: #777; font-size: 0.8em; margin-top: 10px;}
+                                .pdf-footer { text-align: center; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.8em; color: #999; }
+                                a { color: #667eea; text-decoration: none; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>${APP_NAME} - उत्तर इतिहास</h1>
                     `;
 
                     [...history].reverse().forEach((entry, index) => {
@@ -3302,18 +3330,20 @@ margin: 0;
                     });
 
                     historyContentHtml += `
-                        <div class="pdf-footer">
-                            <p>© ${new Date().getFullYear()} ${APP_NAME}</p>
-                            <p><a href="${APP_URL}" target="_blank">AI Solver से और प्रश्न पूछें</a></p>
-                        </div>
+                            <div class="pdf-footer">
+                                <p>© ${new Date().getFullYear()} ${APP_NAME}</p>
+                                <p><a href="${APP_URL}" target="_blank">AI Solver से और प्रश्न पूछें</a></p>
+                            </div>
+                        </body>
+                        </html>
                     `;
                     tempDiv.innerHTML = historyContentHtml;
 
                     const opt = {
                         margin:       [0.5, 0.5, 0.5, 0.5],
                         filename:     'YADAV_Sir_AI_Solver_All_History.pdf',
-                        image:        { type: 'jpeg', quality: 0.98 },
-                        html2canvas:  { scale: 2, logging: false, dpi: 192, letterRendering: true, useCORS: true },
+                        image:        { type: 'png', quality: 1.0 },
+                        html2canvas:  { scale: 3, dpi: 300, letterRendering: true, useCORS: true },
                         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
                         pagebreak:    { mode: 'css', before: '.pdf-history-item' }
                     };
@@ -3450,7 +3480,7 @@ let index = 0;
       if (touchEndX < touchStartX - threshold) {
         // Swipe left - next slide
         nextSlide();
-      } else if (touchEndX > touchStartX + threshold) {
+      } else if (touchEndX > touchStartX - threshold) {
         // Swipe right - previous slide
         prevSlide();
       }

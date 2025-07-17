@@ -1,886 +1,3584 @@
+
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional App Maker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
+    <title>AI Math & GK Solver</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Cropper.js के लिए CSS और JS फाइलें -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
+    
+    <!-- html2pdf.js CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 450px;
+        height: 100vh; /* Full height on mobile */
+        display: flex;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        overflow: hidden; /* Prevent container scroll, main/outputArea manage it */
+    }
+
+    header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 1.1em;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    header .menu-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 1.5em;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 10%;
+        transition: all 0.3s ease;
+    }
+
+    header .menu-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+    }
+
+    header .app-title {
+        font-weight: 900;
+        font-size: 1.3em;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        position: relative;
+    }
+
+    textarea#questionInput {
+        flex-grow: 0;
+        width: calc(100% - 30px);
+        min-height: 90px;
+        border: 2px solid transparent;
+        border-radius: 15px;
+        padding: 20px;
+        font-size: 1.1em;
+        resize: none;
+        outline: none;
+        margin-bottom: 15px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    textarea#questionInput:focus {
+        border-color: #667eea;
+        background: rgba(255, 255, 255, 0.95);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .input-options {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+    }
+
+    .action-buttons button, .file-input-wrapper {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.4em;
+        color: white;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-buttons button:hover, .file-input-wrapper:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+    }
+
+    .action-buttons button:disabled, .file-input-wrapper.disabled {
+        background: #a7a7a7;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    #imagePreview {
+        max-width: 100%;
+        max-height: 120px;
+        margin: 10px 0;
+        border-radius: 10px;
+        display: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        object-fit: contain;
+    }
+
+    #outputArea {
+        flex-grow: 1;
+        flex-shrink: 1;
+        flex-basis: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        font-size: 1.1em;
+        word-wrap: break-word;
+        overflow-y: auto;
+        margin-top: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        min-height: 150px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #outputTextContent {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-bottom: 50px;
+        /* Dynamic font size will be applied here */
+        font-size: var(--output-font-size, 1.1em); 
+    }
+    
+    #outputPlaceholder {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    /* Main Speaker Button Styles */
+    #speakerBtn, #favoriteOutputBtn, #downloadOutputPdfBtn { /* [संशोधित] #downloadOutputPdfBtn जोड़ा गया */
+        position: absolute;
+        bottom: 15px;
+        background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        display: none; /* JS द्वारा नियंत्रित */
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2em;
+        color: white;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 5;
+    }
+    
+    #speakerBtn {
+        right: 15px; /* [संशोधित] पोजिशन एडजस्ट की गई */
+    }
+
+    #speakerBtn:hover, #favoriteOutputBtn:hover, #downloadOutputPdfBtn:hover { /* [संशोधित] */
+        transform: translateY(-2px) scale(1.05);
+    }
+    
+    #speakerBtn:hover {
+        box-shadow: 0 4px 15px rgba(26, 188, 156, 0.4);
+    }
+    
+    #speakerBtn.playing {
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    }
+
+    #favoriteOutputBtn {
+        right: 70px; /* [संशोधित] पोजिशन एडजस्ट की गई */
+        background: linear-gradient(135deg, #f06292 0%, #e91e63 100%); /* Pink/Red for favorite */
+    }
+
+    #favoriteOutputBtn:hover {
+        box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
+    }
+
+    #favoriteOutputBtn.favorited {
+        background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%); /* Gold/Orange when favorited */
+    }
+
+    /* [नया] नए PDF डाउनलोड बटन के लिए स्टाइल */
+    #downloadOutputPdfBtn {
+        right: 125px; /* सबसे बाईं ओर */
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); /* PDF के लिए ऑरेंज */
+    }
+
+    #downloadOutputPdfBtn:hover {
+        box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+    }
+
+    /* History & Favorites List Speaker Button Styles */
+    .history-speaker-btn {
+        background: rgba(102, 126, 234, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: none; /* Controlled by JS based on TTS support */
+        justify-content: center;
+        align-items: center;
+        font-size: 0.8em;
+        color: #667eea;
+        cursor: pointer;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        margin-left: 10px;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+
+    .history-speaker-btn:hover {
+        background: rgba(102, 126, 234, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .history-speaker-btn.playing {
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+        color: white;
+    }
+
+    /* PDF Download Button Style */
+    #downloadHistoryPdfBtn {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); /* Orange for PDF */
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 20px;
+        font-size: 1em;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px auto 0; /* Center it below history list */
+        box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+        transition: all 0.3s ease;
+        width: calc(100% - 40px); /* Adjust width */
+        max-width: 250px;
+    }
+
+    #downloadHistoryPdfBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(243, 156, 18, 0.6);
+    }
+    #downloadHistoryPdfBtn:disabled {
+        background: #a7a7a7;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+
+    /* Individual PDF download button in history list / favorites list */
+    .single-pdf-btn {
+        background: rgba(243, 156, 18, 0.2); /* Lighter orange */
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.8em;
+        color: #f39c12;
+        cursor: pointer;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        margin-left: 10px;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+
+    .single-pdf-btn:hover {
+        background: rgba(243, 156, 18, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+
+    .send-btn {
+        position: absolute;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.6em;
+        color: white;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+
+    .send-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 30px rgba(255, 107, 107, 0.6);
+    }
+
+    .send-btn:disabled {
+        background: #a7a7a7;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+
+    /* Camera Modal Styles */
+    .camera-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .camera-modal.show {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .camera-container {
+        position: relative;
+        max-width: 90%;
+        max-height: 70%;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    #cameraVideo {
+        width: 100%;
+        height: auto;
+        border-radius: 18px;
+        display: block;
+    }
+
+    .camera-controls {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+
+    .camera-btn {
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5em;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .camera-btn:hover {
+        transform: scale(1.1);
+        background: white;
+    }
+
+    .capture-btn {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+        color: white;
+        width: 70px;
+        height: 70px;
+        font-size: 1.8em;
+    }
+
+    .capture-btn:hover {
+        background: linear-gradient(135deg, #ff5252 0%, #d32f2f 100%);
+    }
+
+    .close-camera-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.2em;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .close-camera-btn:hover {
+        background: white;
+        transform: scale(1.1);
+    }
+
+    /* Common Modal Styles */
+    .history-modal, .main-menu-modal, .settings-modal, .favorites-modal { /* Added .favorites-modal */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+    }
+
+    .history-modal.show, .main-menu-modal.show, .settings-modal.show, .favorites-modal.show { /* Added .favorites-modal */
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .modal-content {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 30px;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-content h2 {
+        margin-top: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 1.5em;
+    }
+
+    .modal-content .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255, 107, 107, 0.1);
+        border: none;
+        font-size: 1.5em;
+        color: #ff6b6b;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .modal-content .close-btn:hover {
+        background: rgba(255, 107, 107, 0.2);
+        transform: scale(1.1);
+    }
+
+    #historyList, #mainMenuOptions, #favoritesList { /* Added #favoritesList */
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #historyList li, #favoritesList li { /* Added #favoritesList li */
+        background: rgba(102, 126, 234, 0.1);
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 15px;
+        font-size: 0.95em;
+        line-height: 1.5;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    #historyList li:hover, #favoritesList li:hover { /* Added #favoritesList li */
+        background: rgba(102, 126, 234, 0.15);
+        transform: translateX(5px);
+    }
+
+    #historyList li strong, #favoritesList li strong { /* Added #favoritesList li */
+        color: #667eea;
+    }
+
+    #historyList li .answer-content, #favoritesList li .answer-content { /* Added #favoritesList li */
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+        color: #555;
+        word-break: break-word;
+    }
+
+    #historyList li .answer-text-wrapper, #favoritesList li .answer-text-wrapper { /* Added #favoritesList li */
+        flex-grow: 1;
+    }
+
+    #historyList li small, #favoritesList li small { /* Added #favoritesList li */
+        display: block;
+        margin-top: 8px;
+        color: #999;
+        font-size: 0.8em;
+    }
+
+    /* Main Menu Specific Styles */
+    #mainMenuOptions li {
+        margin-bottom: 10px;
+    }
+
+    #mainMenuOptions button, .settings-option button { /* Added settings-option button */
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 10px;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        font-size: 1.1em;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    #mainMenuOptions button:hover, .settings-option button:hover { /* Added settings-option button */
+        background: rgba(102, 126, 234, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+    }
+
+    #mainMenuOptions button i, .settings-option i { /* Added settings-option i */
+        font-size: 1.3em;
+        color: #764ba2;
+    }
+
+    .menu-divider {
+        height: 1px;
+        background-color: rgba(0,0,0,0.1);
+        margin: 20px 0;
+    }
+
+    /* Settings Modal Specific Styles */
+    .settings-option {
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 10px;
+        background: rgba(102, 126, 234, 0.05);
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .settings-option label {
+        display: block;
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+    }
+
+    .settings-option select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 1em;
+        background-color: white;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .settings-option select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        outline: none;
+    }
+
+    .settings-option .text-size-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .settings-option .text-size-options label {
+        background: rgba(102, 126, 234, 0.1);
+        border: 1px solid rgba(102, 126, 234, 0.2);
+        color: #667eea;
+        padding: 10px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: normal;
+        margin-bottom: 0; /* Override default label margin */
+        flex-grow: 1;
+        text-align: center;
+        min-width: 40px; /* Ensure buttons don't get too small */
+    }
+
+    .settings-option .text-size-options input[type="radio"] {
+        display: none;
+    }
+
+    .settings-option .text-size-options input[type="radio"]:checked + label {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #764ba2;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .settings-option .text-size-options label:hover {
+        background: rgba(102, 126, 234, 0.2);
+    }
+
+    #removeAdsBtn {
+        background: linear-gradient(135deg, #28a745 0%, #218838 100%); /* Green for 'No Ads' */
+        color: white;
+        margin-top: 15px;
+        font-size: 1.1em;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+    #removeAdsBtn:hover {
+        background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+    }
+    #removeAdsBtn:disabled {
+        background: #a7a7a7;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+
+
+    /* Loading animation */
+    .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Ad Banner Styles */
+    .ad-banner {
+        width: 100%;
+        padding: 10px; /* Some padding around the ad */
+        box-sizing: border-box; /* Include padding in width */
+        text-align: center; /* Center the ad if it's smaller than 100% */
+        background: rgba(0, 0, 0, 0.05); /* Slight background to separate it */
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        margin-top: auto; /* Push it to the bottom if container is flex-column */
+        min-height: 120px; /* Give it enough space for the ad (100px + padding) */
+        display: flex; /* Use flex to center iframe if it's smaller */
+        justify-content: center;
+        align-items: center;
+        overflow: hidden; /* Prevent overflow if ad content is too big */
+    }
+
+    /* Responsive design */
+    @media (max-width: 480px) {
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
+            border-radius: 0;
+            height: 100vh;
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 20px 0;
-            border-bottom: 2px solid #e2e8f0;
+        main {
+            padding: 15px;
         }
         
-        .header h1 {
-            color: #2d3748;
-            font-size: 2.8em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .send-btn {
+            bottom: 100px;
+            right: 20px;
         }
-        
-        .header p {
-            color: #4a5568;
-            font-size: 1.2em;
-            font-weight: 500;
+
+        #speakerBtn {
+            bottom: 10px;
+            right: 10px; /* [संशोधित] */
+            width: 40px;
+            height: 40px;
+            font-size: 1.1em;
         }
-        
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 30px;
+        #favoriteOutputBtn {
+            bottom: 10px;
+            right: 60px; /* [संशोधित] */
+            width: 40px;
+            height: 40px;
+            font-size: 1.1em;
         }
-        
-        .form-section {
-            background: rgba(247, 250, 252, 0.8);
-            padding: 30px;
-            border-radius: 15px;
-            border: 1px solid #e2e8f0;
+        /* [नया] मोबाइल के लिए PDF बटन */
+        #downloadOutputPdfBtn {
+            bottom: 10px;
+            right: 110px;
+            width: 40px;
+            height: 40px;
+            font-size: 1.1em;
         }
-        
-        .form-section h3 {
-            color: #2d3748;
-            margin-bottom: 20px;
-            font-size: 1.4em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+
+
+        .history-speaker-btn, .single-pdf-btn { /* Apply to both new buttons */
+            width: 28px;
+            height: 28px;
+            font-size: 0.7em;
+            margin-left: 8px;
         }
-        
-        .form-group {
-            margin-bottom: 20px;
+
+        #downloadHistoryPdfBtn {
+            padding: 10px 15px;
+            font-size: 0.9em;
+            gap: 8px;
         }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 1em;
+
+        .camera-container {
+            max-width: 95%;
+            max-height: 60%;
         }
-        
-        input[type="text"], input[type="url"], input[type="file"], textarea, select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            background: white;
-        }
-        
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        
-        .logo-upload {
-            display: flex;
-            align-items: center;
+
+        .camera-controls {
+            bottom: 10px;
             gap: 15px;
         }
-        
-        .logo-preview {
+
+        .camera-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.3em;
+        }
+
+        .capture-btn {
             width: 60px;
             height: 60px;
-            border: 2px dashed #cbd5e0;
-            border-radius: 8px;
+            font-size: 1.6em;
+        }
+
+        .modal-content {
+            max-width: 95%;
+            padding: 20px;
+        }
+
+        .ad-banner {
+            padding: 8px;
+            min-height: 100px; /* Slightly less height on mobile */
+        }
+    }
+
+
+ .social-buttons {
+            position: fixed;
+            top: 25%;
+            right: 4px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 1000;
+        }
+        
+        .social-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 5%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: white;
-            flex-shrink: 0;
+            box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            text-decoration: none;
         }
         
-        .logo-preview img {
-            width: 55px;
-            height: 55px;
-            object-fit: cover;
-            border-radius: 6px;
+        .social-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
         
-        .logo-preview.empty {
-            color: #a0aec0;
-            font-size: 12px;
-        }
         
-        .color-group {
+
+        
+        .social-icon {
+            color: white;
+            font-size: 22px;
+        }
+
+
+// ads लोगो //
+
+margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #e1bee7);
+      text-align: center;
+      touch-action: pan-y; /* Allow vertical touch scrolling */
+    }
+
+    .slider {
+      width: 100%;
+      max-width: 370px; /* Modified width to 320px */
+      height: 40px; /* Added height constraint of 50px */
+      margin: 20px auto;
+      overflow: hidden;
+      border-radius: 2px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .slides {
+      display: flex;
+      transition: transform 0.6s ease-in-out;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide {
+      flex: 0 0 100%;
+      position: relative;
+      height: 100%;
+    }
+
+    .slide-link {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide img {
+      width: 100%;
+      height: 50px; /* Fixed height to 50px */
+      object-fit: cover; /* Maintain aspect ratio while filling the container */
+      display: block;
+    }
+
+    .app-card {
+      margin: 30px auto;
+      max-width: 350px;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      border-radius: 10px;
+      padding: 4px 20px;
+      box-shadow: 0 10px 25px rgba(0, 114, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 2px solid #00c6ff;
+      color: white;
+    }
+
+    .app-logo {
+      width: 55px;
+      height: 55px;
+      border-radius: 12px;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .app-name {
+      font-size: 19px;
+      font-weight: 600;
+      flex: 1;
+      text-align: left;
+      padding-left: 10px;
+      color: #ffffff;
+    }
+
+    .install-btn {
+      background: #003cb3; /* गाढ़ा नीला */
+      color: white;
+      padding: 15px 25px;
+      border: none;
+      border-radius: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: 0.3s ease;
+    }
+
+    .install-btn:hover {
+      background: #002080; /* और गहरा नीला hover पर */
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ccc;
+      margin: 0 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .dot.active {
+      background: #0072ff;
+    }
+
+
+
+  // Days and months in Hindi
+        
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #7B8FB0 0%, #9BB5D6 100%);
             display: flex;
-            gap: 15px;
-        }
-        
-        .color-item {
-            flex: 1;
-        }
-        
-        .color-item input[type="color"] {
-            width: 100%;
-            height: 40px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
-            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+            min-height: 1vh;
             padding: 2px;
         }
         
-        .preview-section {
-            background: rgba(247, 250, 252, 0.8);
-            padding: 30px;
-            border-radius: 15px;
-            border: 1px solid #e2e8f0;
-            text-align: center;
+        .widget-container {
+            text-align: left;
+            color: white;
+            padding: 0px;
+            max-width: 0px;
+            width: 0%;
         }
         
-        .preview-section h3 {
-            color: #2d3748;
-            margin-bottom: 20px;
-            font-size: 1.4em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+        .time-display {
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: -2px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            line-height: 1;
         }
         
-        .phone-mockup {
-            width: 250px;
-            height: 450px;
-            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
-            border-radius: 30px;
-            padding: 20px;
-            margin: 0 auto 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        .date-display {
+            font-size: 1.1rem;
+            font-weight: 400;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: px) {
+            .widget-container {
+                padding: 0px 0px;
+            }
+            
+            .time-display {
+                font-size: 4rem;
+            }
+            
+            .date-display {
+                font-size: 1.1rem;
+            }
+        }
+        
+        /* Animation for smooth transitions */
+        .time-display, .date-display {
+            transition: all 0.3s ease;
+        }
+        
+        /* Digital clock styling */
+        .digit {
+            display: inline-block;
             position: relative;
         }
         
-        .phone-screen {
-            width: 100%;
-            height: 100%;
-            background: var(--app-bg-color, #ffffff);
-            border-radius: 20px;
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
+        .colon {
+            animation: blink 1s infinite;
         }
         
-        .app-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 16px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 10% { opacity: 0.7; }
         }
-        
-        .app-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 16px;
-        }
-        
-        .app-name {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--app-text-color, #2d3748);
-            margin-bottom: 10px;
-            line-height: 1.2;
-        }
-        
-        .app-desc {
-            font-size: 12px;
-            color: var(--app-text-color, #4a5568);
-            opacity: 0.8;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
-        
-        .app-btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
-        }
-        
-        .generate-section {
-            grid-column: 1 / -1;
-            text-align: center;
-            background: rgba(247, 250, 252, 0.8);
-            padding: 30px;
-            border-radius: 15px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .generate-btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 18px 50px;
-            border-radius: 30px;
-            font-size: 1.3em;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .generate-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .generate-btn:active {
-            transform: translateY(-1px);
-        }
-        
-        .generate-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .output-section {
-            margin-top: 40px;
-            padding: 30px;
-            background: rgba(247, 250, 252, 0.9);
-            border-radius: 15px;
-            border: 2px solid #48bb78;
-        }
-        
-        .output-section h3 {
-            color: #2d3748;
-            margin-bottom: 25px;
-            font-size: 1.6em;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .output-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .qr-section {
-            text-align: center;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .qr-section h4 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
-        
-        .qr-code {
-            margin: 15px 0;
-        }
-        
-        .qr-code canvas {
-            border: 3px solid #e2e8f0;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .files-section {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .files-section h4 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-        }
-        
-        .download-links {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .download-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            background: linear-gradient(45deg, #48bb78, #38a169);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            justify-content: center;
-        }
-        
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
-        }
-        
-        .download-btn.apk {
-            background: linear-gradient(45deg, #9f7aea, #805ad5);
-        }
-        
-        .download-btn.apk:hover {
-            box-shadow: 0 5px 15px rgba(159, 122, 234, 0.3);
-        }
-        
-        .instructions {
-            background: rgba(255, 248, 220, 0.9);
-            border: 2px solid #f6e05e;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .instructions h4 {
-            color: #744210;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        
-        .instructions ol {
-            color: #744210;
-            line-height: 1.8;
-            padding-left: 20px;
-        }
-        
-        .instructions li {
-            margin-bottom: 8px;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #667eea;
-            font-size: 1.2em;
-            font-weight: 600;
-        }
-        
-        .loading .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .output-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .phone-mockup {
-                width: 200px;
-                height: 360px;
-            }
-            
-            .container {
-                padding: 20px;
-            }
-        }
-    </style>
+
+//gk//
+
+      font-family: 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at top left, #ffe6f0, #e0f7fa);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 100px;
+    }
+
+    h2 {
+      color: #a80055;
+      font-size: 28px;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 2px #fff;
+    }
+
+    .custom-box {
+      background: #fff8fb;
+      padding: 30px;
+      border-radius: 1px;
+      box-shadow: 0 10px 15px rgba(255, 105, 180, 0.2);
+      border: 3px dashed #ff69b4;
+      text-align: center;
+      width: 275px;
+      position: relative;
+    }
+
+    select {
+      width: 100%;
+      padding: 7px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 2px solid #d81b60;
+      background-color: #fff0f5;
+      color: #880e4f;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    select:hover {
+      box-shadow: 0 0 10px #f8bbd0;
+    }
+
+    .submit-btn {
+      padding: 12px 25px;
+      font-size: 16px;
+      background-color: #0d47a1;
+      color: 0d47a1;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .submit-btn:hover {
+      background-color: #ad1457;
+    }
+
+    .message {
+      display: none;
+      margin-top: 18px;
+      color: green;
+      font-weight: bold;
+      animation: bloom 0.6s ease forwards;
+    }
+
+    @keyframes bloom {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+</style>
 </head>
 <body>
+
+  <div class="social-buttons">
+
+<!-- YouTube -->
+<a href="https://youtube.com/@sunnyjaiswalfitness?si=c_mhUrza6jDN0VqG" class="social-btn youtube-btn" target="_blank">
+    <i class="fab fa-youtube"></i>
+</a>
+
+
+        
+        <!-- WhatsApp -->
+        <a href="https://whatsapp.com/channel/0029VbAUHnn7NoZz3vfqy43Z" class="social-btn whatsapp-btn" target="_blank">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+
+
+      <!-- Quiz -->
+       <a href="https://yadav-sir-quiz.vercel.app/" class="social-btn quiz-btn" target="_blank">
+        <i class="fas fa-question-circle"></i>
+       </a>
+
+
+
+
+      
+
+        <!-- Game -->
+        <a href="https://yadav-sir-learn-english-app.vercel.app/#" class="social-btn game-btn" target="_blank">
+            <i class="fas fa-gamepad"></i>
+        </a>
+ </div>
+
+
+
     <div class="container">
-        <div class="header">
-            <h1>🚀 Professional App Maker</h1>
-            <p>Complete Android APK Generator & Progressive Web App Builder</p>
+
+<marquee behavior="scroll" direction="left"> YADAV Sir AI: पढ़ाई की हर मुश्किल का हल, अब आपकी उंगलियों पर!
+
+गणित, रिजनिंग हो या GK, अब कोई टेंशन नहीं! YADAV Sir AI है आपके साथ।
+
+फोटो खींचो, बोलो या टाइप करो - हर सवाल का जवाब पाओ तुरंत!
+
+आपका पर्सनल AI ट्यूटर, 24/7 आपकी मदद के लिए तैयार।
+! </marquee>
+
+      
+      
+        <header>
+
+            <button class="menu-btn" id="menuBtn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="app-title">YADAV Sir AI  </div> Math & GK Solver
+        </header>
+        <main>
+            <textarea id="questionInput" placeholder="गणित हो या रिज़निंग की समस्या,सामान्य ज्ञान का प्रश्न, या कुछ भी पूछें! और उत्तर पाने के लिए ° बटन दबाये!     "></textarea>
+          
+            
+            <div class="input-options">
+                <div class="action-buttons">
+                    <button id="micBtn" title="अपना प्रश्न बोलें">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button id="cameraBtn" title="छवि कैप्चर करने के लिए कैमरा खोलें">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button id="clearInputBtn" title="इनपुट और आउटपुट साफ़ करें">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                    <button id="shareResultBtn" title="वर्तमान प्रश्न और उत्तर साझा करें">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+
+                <div class="file-input-wrapper">
+                    <input type="file" id="imageInput" accept="image/*" title="पूछने के लिए एक छवि अपलोड करें">
+                    <i class="fas fa-image"></i>
+                </div>
+            </div>
+            
+            <img id="imagePreview" alt="Image Preview">
+
+
+               <div id="outputArea">
+                <div id="outputTextContent">
+                    <div id="outputPlaceholder">आपके उत्तर यहाँ दिखाई देंगे।   भाषा चुने चुनने के लिए ☰ बटन दबाये ! 
+
+</div>
+<div class="widget-container">
+        <div class="time-display" id="time">
+            <span class="digit" id="hours">02</span>
+            <span class="colon">:</span>
+            <span class="digit" id="minutes">30</span>
         </div>
         
-        <div class="main-content">
-            <div class="form-section">
-                <h3>📝 App Information</h3>
-                
-                <div class="form-group">
-                    <label for="appName">App Name</label>
-                    <input type="text" id="appName" placeholder="Enter your app name" required>
+        <div class="date-display" id="date">
+            सोम, 14 जुलाई, 2025
+        </div>
+✨</div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="appDescription">App Description</label>
-                    <textarea id="appDescription" placeholder="Describe your app..." required></textarea>
+
+                <button id="speakerBtn" title="उत्तर सुनें">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <!-- New Favorite Button in Output Area -->
+                <button id="favoriteOutputBtn" title="उत्तर को पसंदीदा में जोड़ें">
+                    <i class="fas fa-heart"></i>
+                </button>
+                <!-- [नया] सिंगल उत्तर को PDF डाउनलोड करने के लिए बटन -->
+                <button id="downloadOutputPdfBtn" title="इस उत्तर को PDF के रूप में डाउनलोड करें">
+                    <i class="fas fa-file-pdf"></i>
+                </button>
+            </div>
+            
+            <button class="send-btn" id="sendBtn" title="उत्तर प्राप्त करें">
+                <i class="fas fa-paper-plane">°</i>
+            </button>
+        </main>
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : '480306967542b7913ff49e9f90b4b902',
+        'format' : 'iframe',
+        'height' : 60,
+        'width' : 468,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/480306967542b7913ff49e9f90b4b902/invoke.js"></script>
+
+
+        <!-- ########################################## -->
+        <!-- ##  नया क्रॉप करने वाला Modal यहाँ है    ## -->
+        <!-- ########################################## -->
+        <div class="history-modal" id="cropperModal"> 
+            <div class="modal-content" style="max-width: 90vw; max-height: 90vh;">
+                <h2>🖼️ इमेज को क्रॉप करें</h2>
+                <div id="cropperContainer" style="height: 60vh; margin-bottom: 20px;">
+                    <img id="imageToCrop" src="" alt="Image to crop" style="display: block; max-width: 100%;">
                 </div>
-                
-                <div class="form-group">
-                    <label for="appUrl">Website/App URL</label>
-                    <input type="url" id="appUrl" placeholder="https://yourwebsite.com" required>
+                <div class="action-buttons" style="justify-content: center; gap: 20px;">
+                     <button id="cropImageBtn" class="send-btn" style="position: static; transform: none; background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); width: 120px; border-radius: 10px;" title="क्रॉप की पुष्टि करें">
+                        <i class="fas fa-check"></i> पुष्टि करें
+                    </button>
+                    <button id="cancelCropBtn" class="send-btn" style="position: static; transform: none; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); width: 120px; border-radius: 10px;" title="रद्द करें">
+                        <i class="fas fa-times"></i> रद्द करें
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Camera Modal -->
+        <div class="camera-modal" id="cameraModal">
+            <div class="camera-container">
+                <button class="close-camera-btn" id="closeCameraBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <video id="cameraVideo" autoplay playsinline></video>
+                <div class="camera-controls">
+                    <button class="camera-btn" id="switchCameraBtn" title="कैमरा बदलें">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="camera-btn capture-btn" id="captureBtn" title="फोटो खींचिए">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <button class="camera-btn" id="flashBtn" title="फ़्लैश टॉगल करें">
+                        <i class="fas fa-bolt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Menu Modal -->
+        <div class="main-menu-modal" id="mainMenuModal">
+            <div class="modal-content">
+                <button class="close-btn" id="closeMainMenuBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2>🚀 मेनू</h2>
+
+ <!-- Updated slider content -->
+<div class="slider">
+  <div class="slides" id="slides">
+    <div class="slide">
+      <a href="https://fun-spark.vercel.app/" class="slide-link" target="_blank">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiDowMd2QC338VIRcdDBRkKDtx_zrS8ckXhuWAx8DDBaiE4PPtzlvomlgjA4JeQpZdsQmoCa5zvnHCJmnPdTJW6WQav64g-eUz4CFMQUqSkiIJXyet738WNADlbaFXubsoKxYRez7on5bef465s98n2pk9pzisZUSpYx4zaANqO_tzvx96Wif45ge6RP1cS/s625/%F0%9F%98%9C_20250623_205212_0000.png" alt="Ad 1">
+      </a>
+    </div>
+   <div class="slide">
+      <a href="https://yadav-sir-learn-english-app.vercel.app/#" class="slide-link" target="_blank">
+        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhDOvgI2i2-VATFWQ91furff9IrITugExIzM-U8dPARHtME_h7efnc77XBezmiRQu-g-4K1fxWMDVfi4VaHfO-2TiLaXeFpweSbGzeYCI_FP9zwvk0PkFYY6ZwSc-bfDYUEhhNrMBWd1gXViMjIQ1AhqL51S52gmbnhFHjZ8eScoD9A5XAMdKonrjFUdRms/s625/%F0%9F%98%9C_20250623_210437_0000.png" alt="Ad 1">
+      </a>
+    </div>
+  </div>
+  <div class="dots" id="dots"></div>
+</div>
+
+<li style="border-bottom: 1px solid #ccc; margin: 5px 0; list-style: none; width: 100%;"></li>
+
+ 
+
+
+
+                <ul id="mainMenuOptions">
+
+                     <li><button id="settingsBtn"><i class="fas fa-gear"></i> सेटिंग्स ( भाषा चुने ) </button></li>
+      
+                    <!-- New Favorites Button -->
+                    <li><button id="openHistoryBtn"><i class="fas fa-history"></i> उत्तर इतिहास और PDF डाउनलोड  </button></li>
+                    <li><button id="openFavoritesBtn"><i class="fas fa-heart"></i> पसंदीदा PDF </button></li>
+
+           
+                 
+                    <li><button id="newGkQuestionBtn"><i class="fas fa-brain"></i> नया सामान्य ज्ञान प्रश्न</button></li>
+                    <li><button id="newMathProblemBtn"><i class="fas fa-calculator"></i> नई गणित समस्या</button></li>
+
+
+
+  <div class="custom-box">
+    <div class="flower top-left"></div>
+    <div class="flower top-right"></div>
+    <div class="flower bottom-left"></div>
+    <div class="flower bottom-right"></div>
+
+    <label for="states">
+        आपके राज्य का सामान्य ज्ञान
+       ( All Gk टेस्ट )
+अपने राज्य
+का
+सामान्य ज्ञान पढ़ने के लिए
+      अपना राज्य
+ चुनें
+ ( 28 राज्य और 8 केन्द्र शासित प्रदेश All gk  )
+</label><br><br>
+    <select id="states">
+      <option value="">---
+      अपना राज्य
+ चुनें
+ &#9776;
+ </option>
+    </select>
+
+    <button class="submit-btn" onclick="submitState()">♻️Submit</button>
+    <p id="msg" class="message">
+        थोडी डेर रुके हम आपके राज्य के All GK को सर्च
+  कर रहे है l
+       
+        </p>
+  </div>
+
+<li class="menu-divider"></li>
+
+
+
+
+<li>
+  <button id="quizBtn" onclick="window.open('https://math-brain-games.vercel.app/', '_blank')">
+    <i class="fas fa-question-circle"></i> Math BrainGame दिमाग को तेज करें!
+  </button>
+</li>
+
+
+
+            <li><button id="downloadAppBtn"><i class="fas fa-download"></i> ऐप डाउनलोड करें (PWA)</button></li>
+
+
+
+                     
+
+
+
+
+                    <li><button class="cta-button" id="cta-menu-btn" onclick="window.open('https://yadavsir.vercel.app/', '_blank')">📝 YADAV Sir AI से Doubt clear करे</button></li>
+            
+
+                    <li class="menu-divider"></li>
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : '0b8aa55807c4c60910b9fa612d97b689',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/0b8aa55807c4c60910b9fa612d97b689/invoke.js"></script>
+
+
+                    <li class="menu-divider"></li>
+
+   
+                    <li>
+                        <a href="https://yadav-sir-learn-english-app.vercel.app/#" id="learnEnglishBtn" style="display: inline-block; padding: 10px 20px; background-color: #007BFF; color: white; border-radius: 5px; text-decoration: none;">
+                            <i class="fas fa-book"></i> इंग्लिश बोलना सीखें मात्र 30 दिनों में  यहाँ क्लिक करे </a>
+                    </li>
+                     <li><button id="rateAppBtn"><i class="fas fa-thumbs-up"></i> इस ऐप को रेट करें</button></li>
+                 
+           
+                  <li>
+               <button id="privacyPolicyBtn" onclick="window.open('https://yadav-sir-ai-math-gk-solver-rule.vercel.app/', '_blank')">
+               <i class="fas fa-shield-alt"></i> गोपनीयता नीति
+               </button>
+                </li>
+
+                  <li><button id="shareAppBtn"><i class="fas fa-share-alt"></i> ऐप साझा करें</button></li>
+
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : '0b8aa55807c4c60910b9fa612d97b689',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/0b8aa55807c4c60910b9fa612d97b689/invoke.js"></script>
+
+
+
+<script type='text/javascript' src='//pl27179900.profitableratecpm.com/07/70/9a/07709a7ed15e1bcf5bffbab8b81ec562.js'></script>
+
+<script async="async" data-cfasync="false" src="//pl27179941.profitableratecpm.com/2f82c6959178f990538d79c6401602c4/invoke.js"></script>
+<div id="container-2f82c6959178f990538d79c6401602c4"></div>
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'fc25a66bbc733547fe693d84367c513e',
+        'format' : 'iframe',
+        'height' : 250,
+        'width' : 300,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/fc25a66bbc733547fe693d84367c513e/invoke.js"></script>
+
+
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'fc25a66bbc733547fe693d84367c513e',
+        'format' : 'iframe',
+        'height' : 250,
+        'width' : 300,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/fc25a66bbc733547fe693d84367c513e/invoke.js"></script>
+
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : '0b8aa55807c4c60910b9fa612d97b689',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/0b8aa55807c4c60910b9fa612d97b689/invoke.js"></script>
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+                 
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'fc25a66bbc733547fe693d84367c513e',
+        'format' : 'iframe',
+        'height' : 250,
+        'width' : 300,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/fc25a66bbc733547fe693d84367c513e/invoke.js"></script>
+
+
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : '0b8aa55807c4c60910b9fa612d97b689',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/0b8aa55807c4c60910b9fa612d97b689/invoke.js"></script>
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : '0b8aa55807c4c60910b9fa612d97b689',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/0b8aa55807c4c60910b9fa612d97b689/invoke.js"></script>
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'fc25a66bbc733547fe693d84367c513e',
+        'format' : 'iframe',
+        'height' : 250,
+        'width' : 300,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/fc25a66bbc733547fe693d84367c513e/invoke.js"></script>
+
+
+   </div>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Favorites Modal (New Feature) -->
+        <div class="favorites-modal" id="favoritesModal">
+            <div class="modal-content">
+                <button class="close-btn" id="closeFavoritesBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2>❤️ पसंदीदा</h2>
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : '0b8aa55807c4c60910b9fa612d97b689',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/0b8aa55807c4c60910b9fa612d97b689/invoke.js"></script>
+
+                <ul id="favoritesList">
+                    <!-- Favorites items will be inserted here by JavaScript -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- History Modal -->
+        <div class="history-modal" id="historyModal">
+            <div class="modal-content">
+                <button class="close-btn" id="closeHistoryBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2>📚 उत्तर इतिहास</h2>
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+
+                <button id="downloadHistoryPdfBtn" title="पूरा इतिहास PDF के रूप में डाउनलोड करें">
+                    <i class="fas fa-file-pdf"></i> सभी इतिहास PDF डाउनलोड करें
+                </button>
+
+                <ul id="historyList">
+                    <!-- History items will be inserted here by JavaScript -->
+                </ul>         
+            </div>     
+        </div>
+
+        <!-- Settings Modal -->
+        <div class="settings-modal" id="settingsModal">
+            <div class="modal-content">
+                <button class="close-btn" id="closeSettingsBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2>⚙️ सेटिंग्स</h2>
+
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
                 
-                <div class="form-group">
-                    <label for="appCategory">App Category</label>
-                    <select id="appCategory">
-                        <option value="business">Business</option>
-                        <option value="education">Education</option>
-                        <option value="entertainment">Entertainment</option>
-                        <option value="lifestyle">Lifestyle</option>
-                        <option value="productivity">Productivity</option>
-                        <option value="social">Social</option>
-                        <option value="utility">Utility</option>
+                <div class="settings-option">
+                    <label for="languageSelect">भाषा चुनें:</label>
+                    <select id="languageSelect">
+                        <option value="auto">स्वचालित (Auto-detect)</option>
+                        <option value="hi">🇮🇳हिंदी (Hindi)</option>
+                        <option value="en">🇺🇸अंग्रेजी (English)</option>
+                <option value="es">🇪🇸 स्पेनिश (Spanish)</option>
+                <option value="fr">🇫🇷 फ्रेंच (French)</option>
+                <option value="de">🇩🇪 जर्मन (German)</option>
+                <option value="ja">🇯🇵 जापानी (Japanese)</option>
+                <option value="ko">🇰🇷 कोरियाई (Korean)</option>
+                <option value="zh">🇨🇳 चीनी (Chinese)</option>
+                <option value="ar">🇸🇦 अरबी (Arabic)</option>
+                <option value="ru">🇷🇺 रूसी (Russian)</option>
+                <option value="pt">🇧🇷 पुर्तगाली (Portuguese)</option>
+                <option value="it">🇮🇹 इतालवी (Italian)</option>
+                <option value="nl">🇳🇱 डच (Dutch)</option>
+                <option value="sv">🇸🇪 स्वीडिश (Swedish)</option>
+                <option value="da">🇩🇰 डेनिश (Danish)</option>
+                <option value="no">🇳🇴 नॉर्वेजियन (Norwegian)</option>
+                <option value="fi">🇫🇮 फिनिश (Finnish)</option>
+                <option value="pl">🇵🇱 पोलिश (Polish)</option>
+                <option value="tr">🇹🇷 तुर्की (Turkish)</option>
+                <option value="th">🇹🇭 थाई (Thai)</option>
+                <option value="vi">🇻🇳 वियतनामी (Vietnamese)</option>
+                <option value="id">🇮🇩 इंडोनेशियाई (Indonesian)</option>
+                <option value="ms">🇲🇾 मलय (Malay)</option>
+                <option value="tl">🇵🇭 फिलिपिनो (Filipino)</option>
+                <option value="bn">🇧🇩 बंगाली (Bengali)</option>
+                <option value="ur">🇵🇰 उर्दू (Urdu)</option>
+                <option value="ta">🇮🇳 तमिल (Tamil)</option>
+                <option value="te">🇮🇳 तेलुगु (Telugu)</option>
+                <option value="mr">🇮🇳 मराठी (Marathi)</option>
+                <option value="gu">🇮🇳 गुजराती (Gujarati)</option>
+                <option value="kn">🇮🇳 कन्नड़ (Kannada)</option>
+                <option value="ml">🇮🇳 मलयालम (Malayalam)</option>
+                <option value="pa">🇮🇳 पंजाबी (Punjabi)</option>
+                <option value="or">🇮🇳 ओड़िया (Odia)</option>
+                <option value="as">🇮🇳 असमिया (Assamese)</option>
                     </select>
                 </div>
+
+                <div class="settings-option">
+                    <label>उत्तर टेक्स्ट का आकार:</label>
+                    <div class="text-size-options" id="textSizeOptions">
+                        <input type="radio" id="textSizeSmall" name="textSize" value="14px">
+                        <label for="textSizeSmall">छोटा</label>
+                        <input type="radio" id="textSizeMedium" name="textSize" value="16px" checked>
+                        <label for="textSizeMedium">मध्यम</label>
+                        <input type="radio" id="textSizeLarge" name="textSize" value="18px">
+                        <label for="textSizeLarge">बड़ा</label>
+                    </div>
+                </div>
+             
+                <div class="settings-option">
+
+
+                <li><button class="cta-button" id="cta-menu-btn" onclick="window.open('https://yadav-sirapp.vercel.app/', '_blank')"> 💰 YADAV Sir को App क्रेडिट के लिए दान कर सकते है  Thanks for you क्लिक करे   </button></li>
+
+
+</div>
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+  <script type="text/javascript">
+    atOptions = {
+        'key' : 'fc25a66bbc733547fe693d84367c513e',
+        'format' : 'iframe',
+        'height' : 250,
+        'width' : 300,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/fc25a66bbc733547fe693d84367c513e/invoke.js"></script>
                 
-                <div class="form-group">
-                    <label>App Logo</label>
-                    <div class="logo-upload">
-                        <div class="logo-preview empty" id="logoPreview">
-                            No Logo
-                        </div>
-                        <input type="file" id="appLogo" accept="image/*">
-                    </div>
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+
+<script type="text/javascript">
+    atOptions = {
+        'key' : 'dfb9f45a0bfc2772a4f0f47ce1391707',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+    };
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/dfb9f45a0bfc2772a4f0f47ce1391707/invoke.js"></script>
+
+
+
+                    <button id="removeAdsBtn"><i class="fas fa-ban"></i> विज्ञापन-मुक्त अनुभव प्राप्त करें </button>
                 </div>
-                
-                <div class="form-group">
-                    <label>App Colors</label>
-                    <div class="color-group">
-                        <div class="color-item">
-                            <label for="primaryColor">Primary Color</label>
-                            <input type="color" id="primaryColor" value="#667eea">
-                        </div>
-                        <div class="color-item">
-                            <label for="backgroundColor">Background</label>
-                            <input type="color" id="backgroundColor" value="#ffffff">
-                        </div>
-                        <div class="color-item">
-                            <label for="textColor">Text Color</label>
-                            <input type="color" id="textColor" value="#2d3748">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="preview-section">
-                <h3>📱 Live Preview</h3>
-                
-                <div class="phone-mockup">
-                    <div class="phone-screen" id="phoneScreen">
-                        <div class="app-icon" id="appIcon">
-                            📱
-                        </div>
-                        <div class="app-name" id="appNamePreview">App Name</div>
-                        <div class="app-desc" id="appDescPreview">App Description</div>
-                        <button class="app-btn" id="appBtnPreview">Open App</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="generate-section">
-            <button class="generate-btn" id="generateBtn">
-                🔥 Generate App & APK
-            </button>
-        </div>
-        
-        <div id="loadingSection" class="loading hidden">
-            <div class="spinner"></div>
-            <p>आपका app बन रहा है... कृपया प्रतीक्षा करें</p>
-        </div>
-        
-        <div id="outputSection" class="output-section hidden">
-            <h3>🎉 आपका App तैयार है!</h3>
-            
-            <div class="output-grid">
-                <div class="qr-section">
-                    <h4>📱 QR Code</h4>
-                    <p>Mobile से scan करके app खोलें</p>
-                    <div class="qr-code">
-                        <canvas id="qrCanvas" width="200" height="200"></canvas>
-                    </div>
-                </div>
-                
-                <div class="files-section">
-                    <h4>📁 Download Files</h4>
-                    <div class="download-links">
-                        <a href="#" class="download-btn apk" id="downloadApk">
-                            📱 Download APK File
-                        </a>
-                        <a href="#" class="download-btn" id="downloadPwa">
-                            🌐 Download PWA Files
-                        </a>
-                        <a href="#" class="download-btn" id="downloadQr">
-                            📷 Download QR Code
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="instructions">
-                <h4>📋 Installation Instructions:</h4>
-                <ol>
-                    <li><strong>APK File:</strong> Download करके Android phone में install करें</li>
-                    <li><strong>QR Code:</strong> Scan करके directly app खोलें</li>
-                    <li><strong>PWA:</strong> Browser में खोलकर "Add to Home Screen" करें</li>
-                    <li><strong>Share:</strong> QR code को share करके दूसरों को भेजें</li>
-                </ol>
+
             </div>
         </div>
     </div>
 
-    <script>
-        let appData = {
-            name: '',
-            description: '',
-            url: '',
-            category: 'business',
-            logo: null,
-            colors: {
-                primary: '#667eea',
-                background: '#ffffff',
-                text: '#2d3748'
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Get DOM elements
+        const questionInput = document.getElementById('questionInput');
+        const outputArea = document.getElementById('outputArea');
+        const outputTextContent = document.getElementById('outputTextContent');
+        const outputPlaceholder = document.getElementById('outputPlaceholder');
+        const micBtn = document.getElementById('micBtn');
+        const cameraBtn = document.getElementById('cameraBtn');
+        const clearInputBtn = document.getElementById('clearInputBtn');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const sendBtn = document.getElementById('sendBtn');
+        const menuBtn = document.getElementById('menuBtn');
+        
+        // History elements
+        const historyModal = document.getElementById('historyModal');
+        const historyList = document.getElementById('historyList');
+        const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+        const downloadHistoryPdfBtn = document.getElementById('downloadHistoryPdfBtn'); 
+
+        // Main Menu elements
+        const mainMenuModal = document.getElementById('mainMenuModal');
+        const closeMainMenuBtn = document.getElementById('closeMainMenuBtn');
+        const openHistoryBtn = document.getElementById('openHistoryBtn');
+        const downloadAppBtn = document.getElementById('downloadAppBtn');
+        const shareAppBtn = document.getElementById('shareAppBtn');
+        const newGkQuestionBtn = document.getElementById('newGkQuestionBtn');
+        const newMathProblemBtn = document.getElementById('newMathProblemBtn');
+        
+        // New Menu Options
+        const rateAppBtn = document.getElementById('rateAppBtn');
+        const privacyPolicyBtn = document.getElementById('privacyPolicyBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const learnEnglishBtn = document.getElementById('learnEnglishBtn');
+
+        // Settings Modal elements
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const languageSelect = document.getElementById('languageSelect');
+        const textSizeOptions = document.getElementById('textSizeOptions'); // Now correctly referencing the div
+        const removeAdsBtn = document.getElementById('removeAdsBtn');
+        const adContainer = document.getElementById('adContainer'); // Main ad container
+        const allAdDivs = document.querySelectorAll('.ad-banner'); // All ad containers (main + menu/history modals)
+
+        // Camera elements
+        const cameraModal = document.getElementById('cameraModal');
+        const cameraVideo = document.getElementById('cameraVideo');
+        const captureBtn = document.getElementById('captureBtn');
+        const closeCameraBtn = document.getElementById('closeCameraBtn');
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
+        const flashBtn = document.getElementById('flashBtn');
+
+        // Share Result Button
+        const shareResultBtn = document.getElementById('shareResultBtn');
+
+        // Speaker Button and Speech Synthesis (for main output)
+        const speakerBtn = document.getElementById('speakerBtn');
+        let currentUtterance = null;
+        let isSpeaking = false;
+        let selectedTTSVoice = null; 
+
+        // Favorites elements
+        const favoritesModal = document.getElementById('favoritesModal');
+        const favoritesList = document.getElementById('favoritesList');
+        const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
+        const openFavoritesBtn = document.getElementById('openFavoritesBtn'); // The button in the main menu
+        const favoriteOutputBtn = document.getElementById('favoriteOutputBtn'); // New: Button in output area
+        const downloadOutputPdfBtn = document.getElementById('downloadOutputPdfBtn'); // [नया] PDF बटन का रेफरेंस
+
+        // #############################################
+        // ##  इमेज क्रॉप करने के लिए नए एलिमेंट्स    ##
+        // #############################################
+        const cropperModal = document.getElementById('cropperModal');
+        const imageToCrop = document.getElementById('imageToCrop');
+        const cropImageBtn = document.getElementById('cropImageBtn');
+        const cancelCropBtn = document.getElementById('cancelCropBtn');
+        let cropper = null; // Cropper.js इंस्टैंस को रखने के लिए
+
+
+        // API Configuration
+        const GEMINI_API_KEY = 'AIzaSyBUeu73C0MQA8gt4QJmxEwufJ2upI8UT80'; // Keep your API key private in a real app
+
+        // Variables for image data, history, and camera
+        let uploadedImageData = null;
+        let history = []; // This will be loaded from localStorage
+        let favorites = []; // New array for favorites
+
+        // Store the last answered question and answer for easy favoriting
+        let lastAnsweredQuestion = null;
+        let lastAnsweredText = null;
+        let lastAnsweredImageUsed = false;
+
+
+        // Settings variables with defaults
+        let appSettings = {
+            language: 'auto', // 'auto', 'hi', 'en'
+            textSize: '16px', // '12px', '16px', '20px', etc.
+            isAdFree: false // boolean
+        };
+        
+        let currentStream = null;
+        let currentFacingMode = 'environment';
+        let flashEnabled = false;
+
+        const APP_NAME = "YADAV Sir AI Math & GK Solver";
+        const APP_URL = window.location.href; // Get current URL for linking
+
+        // Speech Recognition setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.interimResults = false;
+            recognition.lang = 'hi-IN'; // Default language for speech input
+            recognition.continuous = false;
+        } else {
+            micBtn.disabled = true;
+            micBtn.title = "आपके ब्राउज़र में भाषण पहचान समर्थित नहीं है";
+        }
+
+        // --- Settings Management Functions ---
+        const saveSettings = () => {
+            try {
+                localStorage.setItem('aiSolverSettings', JSON.stringify(appSettings));
+                console.log('सेटिंग्स localStorage में सहेजी गईं।');
+            } catch (e) {
+                console.error('सेटिंग्स को localStorage में सहेजने में त्रुटि हुई:', e);
             }
         };
 
-        // Real-time preview updates
-        document.getElementById('appName').addEventListener('input', function(e) {
-            appData.name = e.target.value;
-            document.getElementById('appNamePreview').textContent = e.target.value || 'App Name';
+        const loadSettings = () => {
+            try {
+                const storedSettings = localStorage.getItem('aiSolverSettings');
+                if (storedSettings) {
+                    appSettings = { ...appSettings, ...JSON.parse(storedSettings) };
+                    console.log('सेटिंग्स localStorage से लोड की गईं:', appSettings);
+                }
+            } catch (e) {
+                console.error('सेटिंग्स को localStorage से लोड करने में त्रुटि हुई:', e);
+            }
+            applySettings();
+        };
+
+        const applySettings = () => {
+            // Apply Language setting
+            languageSelect.value = appSettings.language;
+            loadVoices(); // Reload voices based on selected language
+
+            // Apply Text Size setting
+            outputTextContent.style.fontSize = appSettings.textSize;
+            questionInput.style.fontSize = appSettings.textSize; // Apply to input as well
+            const selectedSizeRadio = textSizeOptions.querySelector(`input[value="${appSettings.textSize}"]`);
+            if (selectedSizeRadio) {
+                selectedSizeRadio.checked = true;
+            }
+
+            // Apply Ad-Free setting
+            if (appSettings.isAdFree) {
+                allAdDivs.forEach(adDiv => adDiv.style.display = 'none');
+                removeAdsBtn.disabled = true;
+                removeAdsBtn.innerHTML = '<i class="fas fa-check-circle"></i> विज्ञापन-मुक्त';
+                removeAdsBtn.title = 'आप पहले से ही विज्ञापन-मुक्त अनुभव का आनंद ले रहे हैं!';
+            } else {
+                allAdDivs.forEach(adDiv => adDiv.style.display = 'flex'); // Ensure ads are visible if not ad-free
+                removeAdsBtn.disabled = false;
+                removeAdsBtn.innerHTML = '<i class="fas fa-ban"></i> विज्ञापन-मुक्त अनुभव प्राप्त करें (₹49)';
+                removeAdsBtn.title = 'विज्ञापन हटाने के लिए ₹49 का भुगतान करें';
+            }
+        };
+
+        // --- History Persistence Functions ---
+        const saveHistory = () => {
+            try {
+                localStorage.setItem('aiSolverHistory', JSON.stringify(history));
+                console.log('इतिहास localStorage में सहेजा गया।');
+            } catch (e) {
+                console.error('इतिहास को localStorage में सहेजने में त्रुटि हुई:', e);
+                alert('इतिहास सहेजने में त्रुटि हुई। शायद स्टोरेज भरा हुआ है।');
+            }
+        };
+
+        const loadHistory = () => {
+            try {
+                const storedHistory = localStorage.getItem('aiSolverHistory');
+                if (storedHistory) {
+                    history = JSON.parse(storedHistory);
+                    console.log('इतिहास localStorage से लोड हुआ।');
+                }
+            } catch (e) {
+                console.error('इतिहास को localStorage से लोड करने में त्रुटि हुई:', e);
+                history = []; // Reset history if loading fails
+            }
+        };
+
+        // --- Favorites Persistence Functions (New) ---
+        const saveFavorites = () => {
+            try {
+                localStorage.setItem('aiSolverFavorites', JSON.stringify(favorites));
+                console.log('पसंदीदा localStorage में सहेजा गया।');
+            } catch (e) {
+                console.error('पसंदीदा को localStorage में सहेजने में त्रुटि हुई:', e);
+                alert('पसंदीदा सहेजने में त्रुटि हुई।');
+            }
+        };
+
+        const loadFavorites = () => {
+            try {
+                const storedFavorites = localStorage.getItem('aiSolverFavorites');
+                if (storedFavorites) {
+                    favorites = JSON.parse(storedFavorites);
+                    console.log('पसंदीदा localStorage से लोड हुआ।');
+                }
+            } catch (e)
+                {
+                console.error('पसंदीदा को localStorage से लोड करने में त्रुटि हुई:', e);
+                favorites = []; // Reset if loading fails
+            }
+        };
+
+        const isFavorited = (entry) => {
+            return favorites.some(fav => 
+                fav.question === entry.question && 
+                fav.answer === entry.answer &&
+                fav.imageUsed === entry.imageUsed
+                // We're not checking timestamp here because the content is what matters for "favorited" state
+            );
+        };
+
+        const addToFavorites = (entry) => {
+            // Check for duplicates based on question, answer, and imageUsed status
+            if (!isFavorited(entry)) {
+                favorites.unshift(entry); // Add to the beginning
+                saveFavorites();
+                return true; // Successfully added
+            }
+            return false; // Already exists
+        };
+
+        const removeFromFavorites = (entryToRemove) => {
+            const initialLength = favorites.length;
+            favorites = favorites.filter(fav => 
+                !(fav.question === entryToRemove.question && 
+                  fav.answer === entryToRemove.answer &&
+                  fav.timestamp === entryToRemove.timestamp) // Match by timestamp too for exact removal
+            );
+            if (favorites.length < initialLength) {
+                saveFavorites();
+                return true;
+            }
+            return false;
+        };
+
+
+        // --- Helper Functions ---
+
+        // Enable/Disable all interaction elements
+        const setInteractionState = (disabled) => {
+            sendBtn.disabled = disabled;
+            questionInput.disabled = disabled;
+            micBtn.disabled = disabled || !SpeechRecognition;
+            cameraBtn.disabled = disabled;
+            clearInputBtn.disabled = disabled;
+            imageInput.disabled = disabled;
+            shareResultBtn.disabled = disabled;
+            document.querySelector('.file-input-wrapper').classList.toggle('disabled', disabled);
+        };
+        
+        // #############################################
+        // ##  इमेज क्रॉप करने के लिए नई फंक्शन      ##
+        // #############################################
+        const startCropper = (imageDataUrl) => {
+            // अगर कैमरा चल रहा है तो उसे बंद करें
+            if (currentStream) {
+                stopCamera();
+            }
+
+            imageToCrop.src = imageDataUrl;
+            cropperModal.classList.add('show');
+            
+            // अगर पहले से कोई cropper है तो उसे हटा दें
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            // Cropper.js को शुरू करें
+            cropper = new Cropper(imageToCrop, {
+                aspectRatio: NaN,      // फ्री-फॉर्म क्रॉपिंग
+                viewMode: 1,           // क्रॉप एरिया को इमेज के अंदर रखें
+                dragMode: 'move',      // इमेज को मूव करने की अनुमति दें
+                background: false,     // पारदर्शी बैकग्राउंड
+                responsive: true,
+                autoCropArea: 0.8,
+            });
+        };
+
+        // Camera functionality
+        const startCamera = async () => {
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                }
+
+                const constraints = {
+                    video: {
+                        facingMode: currentFacingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                cameraVideo.srcObject = currentStream;
+                cameraModal.classList.add('show');
+                
+                const videoTrack = currentStream.getVideoTracks()[0];
+                const capabilities = videoTrack.getCapabilities();
+                if (capabilities.torch) {
+                    flashBtn.style.display = 'flex';
+                    flashBtn.style.background = flashEnabled ? 
+                        'linear-gradient(135deg, #ffd700 0%, #ffb300 100%)' : 
+                        'rgba(255, 255, 255, 0.9)';
+                } else {
+                    flashBtn.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('कैमरा एक्सेस करने में त्रुटि:', error);
+                outputTextContent.innerHTML = `📷 कैमरा एक्सेस त्रुटि: ${error.message}. कृपया कैमरा अनुमतियों की अनुमति दें और पुनः प्रयास करें।`;
+            }
+        };
+
+        const stopCamera = () => {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
+            cameraModal.classList.remove('show');
+        };
+
+        const switchCamera = async () => {
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            await startCamera();
+        };
+
+        const toggleFlash = async () => {
+            if (currentStream) {
+                const videoTrack = currentStream.getVideoTracks()[0];
+                const capabilities = videoTrack.getCapabilities();
+                
+                if (capabilities.torch) {
+                    flashEnabled = !flashEnabled;
+                    try {
+                        await videoTrack.applyConstraints({
+                            advanced: [{ torch: flashEnabled }]
+                        });
+                        flashBtn.style.background = flashEnabled ? 
+                            'linear-gradient(135deg, #ffd700 0%, #ffb300 100%)' : 
+                            'rgba(255, 255, 255, 0.9)';
+                    } catch (error) {
+                        console.error('फ़्लैश नियंत्रण त्रुटि:', error);
+                        outputTextContent.innerHTML = 'फ़्लैश टॉगल करने में विफल। डिवाइस इसे सपोर्ट नहीं करता है या कोई त्रुटि हुई है।';
+                    }
+                } else {
+                    outputTextContent.innerHTML = 'इस कैमरे पर फ़्लैश (टॉर्च) समर्थित नहीं है।';
+                }
+            }
+        };
+        
+        // --- Speech Synthesis Functions ---
+                // --- Speech Synthesis Functions ---
+        const loadVoices = () => {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                 // Voices haven't loaded yet. The browser will call this function again when they do.
+                return;
+            }
+
+            const selectedLangSetting = appSettings.language;
+            let potentialVoice = null;
+
+            // Priority 1: If user explicitly selects a language in settings, try to honor it.
+            if (selectedLangSetting && selectedLangSetting !== 'auto') {
+                 potentialVoice = 
+                    voices.find(voice => voice.lang.startsWith(selectedLangSetting)) ||
+                    voices.find(voice => voice.lang.split('-')[0] === selectedLangSetting);
+            }
+            
+            // Priority 2: If no specific voice found OR setting is 'auto', aggressively find a Hindi voice.
+            // This ensures Hindi is the default unless another language is explicitly chosen and found.
+            if (!potentialVoice) {
+                potentialVoice = 
+                    voices.find(voice => voice.lang === 'hi-IN') || // 1. Perfect match for Indian Hindi
+                    voices.find(voice => voice.lang.startsWith('hi')) || // 2. Any Hindi voice
+                    voices.find(voice => voice.name.toLowerCase().includes('hindi')) || // 3. Name contains "hindi"
+                    voices.find(voice => voice.name.includes('हिन्दी')); // 4. Name contains "हिन्दी"
+            }
+
+            // Priority 3: Fallback to English or browser default if NO voice has been found yet
+            if (!potentialVoice) {
+                potentialVoice = 
+                    voices.find(voice => voice.lang.startsWith('en')) || // English fallback
+                    voices.find(voice => voice.lang.startsWith(navigator.language)) || // Browser language
+                    voices[0]; // Absolute last resort: the first voice available
+            }
+
+            selectedTTSVoice = potentialVoice;
+
+            // Update UI based on whether a voice was found
+            if (!selectedTTSVoice) {
+                console.error("कोई आवाज नहीं मिली। टेक्स्ट-टू-स्पीच काम नहीं कर सकता है।");
+                speakerBtn.style.display = 'none';
+                favoriteOutputBtn.style.display = 'none';
+                downloadOutputPdfBtn.style.display = 'none';
+                document.querySelectorAll('.history-speaker-btn').forEach(btn => btn.style.display = 'none');
+            } else {
+                console.log(`TTS voice selected: ${selectedTTSVoice.name} (${selectedTTSVoice.lang})`);
+                // Ensure speaker buttons in history are visible if TTS is supported
+                document.querySelectorAll('.history-speaker-btn').forEach(btn => btn.style.display = 'inline-flex'); 
+            }
+        };
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices(); // Initial load
+        } else {
+            console.warn("यह ब्राउज़र स्पीच सिंथेसिस API का समर्थन नहीं करता है।");
+            speakerBtn.style.display = 'none';
+            favoriteOutputBtn.style.display = 'none';
+            downloadOutputPdfBtn.style.display = 'none';
+            document.querySelectorAll('.history-speaker-btn').forEach(btn => btn.style.display = 'none');
+        }
+
+        const speakAnswer = (text, targetButton) => {
+            if (!('speechSynthesis' in window) || !selectedTTSVoice) {
+                console.error('भाषण संश्लेषण तैयार नहीं है (API समर्थित नहीं है या कोई आवाज लोड नहीं हुई है)।');
+                alert('क्षमा करें, आपका ब्राउज़र पाठ से वाक् का समर्थन नहीं करता है या आवाज़ें लोड नहीं हुई हैं।');
+                return;
+            }
+
+            stopSpeaking(); // Stop any ongoing speech and reset ALL speaker buttons
+
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.voice = selectedTTSVoice;
+            currentUtterance.lang = selectedTTSVoice.lang;
+            currentUtterance.rate = 1;
+            currentUtterance.pitch = 1;
+
+            currentUtterance.onstart = () => {
+                isSpeaking = true;
+                if (targetButton) {
+                    targetButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                    targetButton.classList.add('playing');
+                    targetButton.title = 'बोलना बंद करें';
+                }
+                console.log('बोलना शुरू हुआ:', text.substring(0, Math.min(50, text.length)) + '...');
+            };
+            currentUtterance.onend = () => {
+                isSpeaking = false;
+                if (targetButton) {
+                    targetButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    targetButton.classList.remove('playing');
+                    targetButton.title = 'उत्तर सुनें';
+                };
+                console.log('बोलना समाप्त हुआ।');
+            };
+            currentUtterance.onerror = (event) => {
+                console.error('भाषण संश्लेषण त्रुटि:', event);
+                isSpeaking = false;
+                if (targetButton) {
+                    targetButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    targetButton.classList.remove('playing');
+                    targetButton.title = 'उत्तर सुनें';
+                }
+                alert('पाठ से वाक् विफल रहा: ' + event.error + '. कृपया पुनः प्रयास करें।');
+            };
+
+            window.speechSynthesis.speak(currentUtterance);
+        };
+
+        const stopSpeaking = () => {
+            if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+            isSpeaking = false;
+            document.querySelectorAll('.history-speaker-btn, #speakerBtn').forEach(btn => {
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                btn.classList.remove('playing');
+                btn.title = 'उत्तर सुनें';
+            });
+            // Also reset favoriteOutputBtn if it's currently showing filled heart
+            favoriteOutputBtn.classList.remove('favorited');
+            favoriteOutputBtn.innerHTML = '<i class="fas fa-heart"></i>';
+        };
+
+
+        // --- Enhanced AI Query Function ---
+        const performAIQuery = async (text, imageData) => {
+
+            let modelName = 'gemini-1.5-flash-latest'; // Using a more recent model
+            const parts = [];
+            let promptText = text.trim();
+
+            // Add language instruction to the prompt
+            if (appSettings.language && appSettings.language !== 'auto') {
+                const langMap = { 'hi': 'Hindi', 'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'ja': 'Japanese', 'ko': 'Korean', 'zh': 'Chinese', 'ar': 'Arabic', 'ru': 'Russian', 'pt': 'Portuguese', 'it': 'Italian', 'nl': 'Dutch', 'sv': 'Swedish', 'da': 'Danish', 'no': 'Norwegian', 'fi': 'Finnish', 'pl': 'Polish', 'tr': 'Turkish', 'th': 'Thai', 'vi': 'Vientamese', 'id': 'Indonesian', 'ms': 'Malay', 'tl': 'Filipino', 'bn': 'Bengali', 'ur': 'Urdµ', 'ta': 'Tamil', 'te': 'Telugu', 'mr': 'Marathi', 'gu': 'Gujarati', 'kn': 'Kannada', 'ml': 'Malayalam', 'pa': 'Punjabi', 'or': 'Odia', 'as': 'Assamese' };
+                promptText = `Respond strictly in ${langMap[appSettings.language]}: ${promptText}`;
+            }
+
+            if (promptText) {
+                if (imageData) {
+                    promptText = `Analyze this image and answer: ${promptText}. Provide a clear, detailed response. If it's a math problem in the image, solve it step by step. If it's GK, provide factual information.`;
+                } else {
+                    const lowerCasePrompt = promptText.toLowerCase();
+                    if (lowerCasePrompt.match(/(\d+\s*[\+\-\*\/xX÷]\s*\d+)|(solve)|(calculate)|(what is the result of)|(evaluate)|(integral)|(derivative)|(equation)|(find x)|(simplify)/i) || (appSettings.language === 'hi' && lowerCasePrompt.match(/(हल करो)|(गणना करो)|(निकालो)|(समीकरण)|(गणित)|(जोड़)|(घटाना)|(गुणा)|(भाग)/i))) {
+                        promptText = `Solve this math problem step by step with clear explanations: ${promptText}`;
+                    } else if (lowerCasePrompt.match(/(who is)|(what is)|(tell me about)|(define)|(fact)|(describe)|(explain)|(history of)|(when did)|(where is)|(what are)|(list)|(quiz)|(gk)|(general knowledge)|(बताओ)|(क्या है)|(कौन है)|(कब)|(कहां)|(वर्णन करो)/i)) {
+                        promptText = `Answer this general knowledge question with accurate, informative details: ${promptText}`;
+                    } else {
+                        promptText = `Provide a helpful and comprehensive answer to: ${promptText}`;
+                    }
+                }
+                parts.push({ text: promptText });
+            }
+
+            if (imageData) {
+                parts.push({
+                    inlineData: {
+                        mimeType: imageData.mimeType,
+                        data: imageData.data
+                    }
+                });
+            }
+
+            if (parts.length === 0) {
+                return 'कृपया एक प्रश्न दर्ज करें या एक छवि अपलोड करें।';
+            }
+
+            const API_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{ parts: parts }],
+                        generationConfig: {
+                            temperature: 0.3,
+                            maxOutputTokens: 1000,
+                            topP: 0.8,
+                            topK: 40
+                        },
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+                        ]
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Gemini API त्रुटि प्रतिक्रिया:', errorData);
+                    
+                    switch (response.status) {
+                        case 400:
+                            return `API त्रुटि: अमान्य अनुरोध या इनपुट। ${errorData.error?.message || ''} कृपया अपना इनपुट जांचें।`;
+                        case 403:
+                            return `API त्रुटि: एक्सेस अस्वीकृत। कृपया अपनी API कुंजी और बिलिंग सेटअप सत्यापित करें।`;
+                        case 429:
+                            return `API त्रुटि: दर सीमा पार हो गई। कृपया थोड़ी देर प्रतीक्षा करें और पुनः प्रयास करें।`;
+                        case 500:
+                            return `API त्रुटि: सर्वर त्रुटि। कृपया बाद में पुनः प्रयास करें।`;
+                        default:
+                            return `API त्रुटि (${response.status}): ${errorData.error?.message || 'अज्ञात त्रुटि हुई'}`;
+                    }
+                }
+
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates.length > 0 && 
+                    data.candidates[0].content && data.candidates[0].content.parts && 
+                    data.candidates[0].content.parts.length > 0 && data.candidates[0].content.parts[0].text) {
+                    return data.candidates[0].content.parts[0].text.trim();
+                } else {
+                    console.warn('अप्रत्याशित API प्रतिक्रिया संरचना या अवरुद्ध सामग्री:', data);
+                    if (data.promptFeedback && data.promptFeedback.blockReason) {
+                        return `सामग्री सुरक्षा फ़िल्टर द्वारा अवरुद्ध: ${data.promptFeedback.blockReason}. कृपया अपना प्रश्न दोबारा लिखें।`;
+                    }
+                    return "कोई प्रतिक्रिया उत्पन्न नहीं हुई। यह सुरक्षा सेटिंग्स या एक खाली प्रतिक्रिया के कारण हो सकता है। कृपया अपना प्रश्न दोबारा लिखें।";
+                }
+
+            } catch (error) {
+                console.error('AI क्वेरी त्रुटि:', error);
+                if (error.message.includes('Failed to fetch')) {
+                    return `नेटवर्क त्रुटि: कृपया अपना इंटरनेट कनेक्शन जांचें और सुनिश्चित करें कि पृष्ठ HTTPS पर सेवा प्रदान कर रहा है।`;
+                }
+                return `त्रुटि: ${error.message}`;
+            }
+        };
+
+        // Function to add query/answer to history
+        const addToHistory = (question, answer, imageUsed = false) => {
+            const timestamp = new Date().toLocaleString();
+            const entry = { question, answer, imageUsed, timestamp };
+            history.unshift(entry);
+            if (history.length > 50) { // Keep history manageable, e.g., max 50 entries
+                history.pop();
+            }
+            saveHistory(); // Save to localStorage immediately
+            return entry; // Return the created entry
+        };
+
+        // Function to generate and save PDF for a single history or favorite entry
+        const generateSinglePdf = async (entry) => {
+            stopSpeaking();
+            const tempDiv = document.createElement('div');
+            tempDiv.style.fontFamily = 'Arial, sans-serif';
+            tempDiv.style.padding = '20px';
+            tempDiv.style.color = '#333';
+            tempDiv.style.lineHeight = '1.6';
+
+            tempDiv.innerHTML = `
+                <h2 style="color: #667eea; text-align: center; margin-bottom: 20px;">${APP_NAME}</h2>
+                <h3 style="color: #764ba2;">प्रश्न:</h3>
+                <p style="word-wrap: break-word;">${entry.question || (entry.imageUsed ? 'छवि-आधारित प्रश्न' : 'कोई प्रश्न नहीं')}</p>
+                <h3 style="color: #764ba2;">उत्तर:</h3>
+                <p style="word-wrap: break-word;">${entry.answer.replace(/\n/g, '<br>')}</p>
+                <small style="display: block; text-align: right; margin-top: 20px; color: #777;">तिथि: ${entry.timestamp}</small>
+                <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.8em; color: #999;">
+                    <p style="margin: 5px 0;">©${new Date().getFullYear()} ${APP_NAME}</p>
+                    <p style="margin: 5px 0;"><a href="${APP_URL}" target="_blank" style="color: #667eea; text-decoration: none;">किसी भी प्रकार के प्रश्न का 1 मिनट उत्तर पाये Ai से -यहाँ क्लिक करें</a></p>
+                </div>
+            `;
+
+            const opt = {
+                margin: 0.5,
+                filename: `YADAV_Sir_AI_Solver_${entry.timestamp.replace(/[:\/,\s]/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: false, dpi: 192, letterRendering: true, useCORS: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: 'avoid-all' }
+            };
+
+            // Determine which modal is active to show loading and restore
+            const activeModal = historyModal.classList.contains('show') ? historyModal : (favoritesModal.classList.contains('show') ? favoritesModal : null);
+            let originalContent = '';
+            let restoreDisplayFunc = null;
+
+            if (activeModal) {
+                const modalContentElem = activeModal.querySelector('.modal-content');
+                originalContent = modalContentElem.innerHTML;
+                restoreDisplayFunc = activeModal === historyModal ? displayHistory : displayFavorites;
+
+                // Show loading state in active modal
+                modalContentElem.innerHTML = `
+                    <div style="text-align: center; padding: 50px;">
+                        <div class="loading" style="width: 40px; height: 40px; border-width: 5px; margin: 0 auto 20px;"></div>
+                        <p style="color: #667eea; font-size: 1.2em;">PDF तैयार हो रही है... कृपया प्रतीक्षा करें।</p>
+                    </div>
+                `;
+                // Disable all relevant buttons in modals
+                document.querySelectorAll('.single-pdf-btn, .history-speaker-btn').forEach(btn => btn.disabled = true);
+            }
+
+            try {
+                await html2pdf().from(tempDiv).set(opt).save();
+                console.log('एकल PDF सफलतापूर्वक डाउनलोड हुआ!');
+            } catch (error) {
+                console.error('एकल PDF जनरेशन विफल हुआ:', error);
+                alert('PDF जनरेशन में त्रुटि हुई। कृपया पुनः प्रयास करें।');
+            } finally {
+                if (activeModal && restoreDisplayFunc) {
+                    // Restore original content and re-enable buttons
+                    activeModal.querySelector('.modal-content').innerHTML = originalContent;
+                    restoreDisplayFunc(); // Re-render to re-attach event listeners and re-enable buttons
+                }
+            }
+        };
+
+
+        // Function to display history in the modal
+        const displayHistory = () => {
+            historyList.innerHTML = ''; // Clear existing list items
+            if (history.length === 0) {
+                const li = document.createElement('li');
+                li.innerHTML = '<em>अभी कोई इतिहास उपलब्ध नहीं है। प्रश्न पूछना शुरू करें! 🤔</em>';
+                historyList.appendChild(li);
+                downloadHistoryPdfBtn.disabled = true; // Disable PDF button if no history
+            } else {
+                downloadHistoryPdfBtn.disabled = false; // Enable PDF button if history exists
+            }
+
+            history.forEach((entry, index) => {
+                const li = document.createElement('li');
+                let questionDisplay = entry.question || '';
+                if (entry.imageUsed) {
+                    questionDisplay = `🖼️ ${questionDisplay.length > 0 ? questionDisplay : 'छवि प्रश्न'}`;
+                }
+                if (questionDisplay.length > 100) {
+                    questionDisplay = questionDisplay.substring(0, 100) + '...';
+                }
+
+                const questionDiv = document.createElement('div');
+                questionDiv.innerHTML = `<strong>प्र:</strong> ${questionDisplay}`;
+                li.appendChild(questionDiv);
+
+                const answerContentDiv = document.createElement('div');
+                answerContentDiv.classList.add('answer-content');
+
+                const answerTextWrapper = document.createElement('span');
+                answerTextWrapper.classList.add('answer-text-wrapper');
+                answerTextWrapper.textContent = `उ: ${entry.answer}`; 
+                answerContentDiv.appendChild(answerTextWrapper);
+
+                const historySpeakerBtn = document.createElement('button');
+                historySpeakerBtn.classList.add('history-speaker-btn');
+                historySpeakerBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                historySpeakerBtn.title = 'उत्तर सुनें';
+                
+                if ('speechSynthesis' in window && selectedTTSVoice) {
+                    historySpeakerBtn.style.display = 'inline-flex'; 
+                } else {
+                    historySpeakerBtn.style.display = 'none';
+                }
+
+                historySpeakerBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (historySpeakerBtn.classList.contains('playing')) {
+                        stopSpeaking();
+                    } else {
+                        speakAnswer(entry.answer, historySpeakerBtn);
+                    }
+                });
+                answerContentDiv.appendChild(historySpeakerBtn);
+
+                // Add individual PDF download button
+                const singlePdfBtn = document.createElement('button');
+                singlePdfBtn.classList.add('single-pdf-btn');
+                singlePdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                singlePdfBtn.title = 'यह उत्तर PDF डाउनलोड करें';
+                singlePdfBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    generateSinglePdf(entry); // Pass the specific entry to the function
+                });
+                answerContentDiv.appendChild(singlePdfBtn);
+
+                // Add Favorite/Unfavorite button to history items
+                const favBtn = document.createElement('button');
+                favBtn.classList.add('history-speaker-btn'); // Reusing some styles
+                favBtn.style.background = 'rgba(240, 98, 146, 0.2)'; // Pink for favorite
+                favBtn.style.color = '#f06292';
+
+                if (isFavorited(entry)) {
+                    favBtn.innerHTML = '<i class="fas fa-heart"></i>'; // Filled heart
+                    favBtn.title = 'पसंदीदा से हटाएँ';
+                    favBtn.classList.add('favorited');
+                } else {
+                    favBtn.innerHTML = '<i class="far fa-heart"></i>'; // Empty heart
+                    favBtn.title = 'पसंदीदा में जोड़ें';
+                    favBtn.classList.remove('favorited');
+                }
+
+                favBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (isFavorited(entry)) {
+                        removeFromFavorites(entry);
+                        alert('पसंदीदा से हटाया गया!');
+                    } else {
+                        addToFavorites(entry);
+                        alert('पसंदीदा में जोड़ा गया!');
+                    }
+                    displayHistory(); // Re-render history to update heart icons
+                    displayFavorites(); // Re-render favorites if it's open
+                });
+                answerContentDiv.appendChild(favBtn);
+
+
+                li.appendChild(answerContentDiv);
+
+                const timestampSmall = document.createElement('small');
+                timestampSmall.innerHTML = entry.timestamp;
+                li.appendChild(timestampSmall);
+
+                historyList.appendChild(li);
+            });
+        };
+
+        // Function to display favorites in the modal (New)
+        const displayFavorites = () => {
+            favoritesList.innerHTML = ''; // Clear existing list items
+            if (favorites.length === 0) {
+                const li = document.createElement('li');
+                li.innerHTML = '<em>अभी कोई पसंदीदा आइटम नहीं है। आप मुख्य आउटपुट से या इतिहास से आइटम पसंदीदा के रूप में चिह्नित कर सकते हैं! ❤️</em>';
+                favoritesList.appendChild(li);
+            } else {
+                favorites.forEach((entry, index) => {
+                    const li = document.createElement('li');
+                    let questionDisplay = entry.question || '';
+                    if (entry.imageUsed) {
+                        questionDisplay = `🖼️ ${questionDisplay.length > 0 ? questionDisplay : 'छवि प्रश्न'}`;
+                    }
+                    if (questionDisplay.length > 100) {
+                        questionDisplay = questionDisplay.substring(0, 100) + '...';
+                    }
+
+                    const questionDiv = document.createElement('div');
+                    questionDiv.innerHTML = `<strong>प्र:</strong> ${questionDisplay}`;
+                    li.appendChild(questionDiv);
+
+                    const answerContentDiv = document.createElement('div');
+                    answerContentDiv.classList.add('answer-content');
+
+                    const answerTextWrapper = document.createElement('span');
+                    answerTextWrapper.classList.add('answer-text-wrapper');
+                    answerTextWrapper.textContent = `उ: ${entry.answer}`;
+                    answerContentDiv.appendChild(answerTextWrapper);
+
+                    // Add a speaker button for favorite items
+                    const favSpeakerBtn = document.createElement('button');
+                    favSpeakerBtn.classList.add('history-speaker-btn'); // Reuse history-speaker-btn styles
+                    favSpeakerBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    favSpeakerBtn.title = 'उत्तर सुनें';
+                    
+                    if ('speechSynthesis' in window && selectedTTSVoice) {
+                        favSpeakerBtn.style.display = 'inline-flex'; 
+                    } else {
+                        favSpeakerBtn.style.display = 'none';
+                    }
+
+                    favSpeakerBtn.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        if (favSpeakerBtn.classList.contains('playing')) {
+                            stopSpeaking();
+                        } else {
+                            speakAnswer(entry.answer, favSpeakerBtn);
+                        }
+                    });
+                    answerContentDiv.appendChild(favSpeakerBtn);
+
+                    // Add a PDF button for favorite items
+                    const favPdfBtn = document.createElement('button');
+                    favPdfBtn.classList.add('single-pdf-btn'); // Reuse single-pdf-btn styles
+                    favPdfBtn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                    favPdfBtn.title = 'यह उत्तर PDF डाउनलोड करें';
+                    favPdfBtn.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        generateSinglePdf(entry); // Reuse the single PDF generation function
+                    });
+                    answerContentDiv.appendChild(favPdfBtn);
+
+                    // Add a "Remove from Favorites" button
+                    const removeFavBtn = document.createElement('button');
+                    removeFavBtn.classList.add('single-pdf-btn'); // Reusing existing button styles
+                    removeFavBtn.style.background = 'rgba(255, 99, 71, 0.2)'; // Custom color for remove
+                    removeFavBtn.style.color = '#ff6347';
+                    removeFavBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                    removeFavBtn.title = 'पसंदीदा से हटाएँ';
+                    removeFavBtn.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        if (confirm('क्या आप इसे पसंदीदा से हटाना चाहते हैं?')) {
+                            removeFromFavorites(entry);
+                            alert('पसंदीदा से हटाया गया!');
+                            displayFavorites(); // Re-render the list
+                            displayHistory(); // Re-render history to update heart icons
+                        }
+                    });
+                    answerContentDiv.appendChild(removeFavBtn);
+
+                    li.appendChild(answerContentDiv);
+
+                    const timestampSmall = document.createElement('small');
+                    timestampSmall.innerHTML = entry.timestamp;
+                    li.appendChild(timestampSmall);
+
+                    favoritesList.appendChild(li);
+                });
+            }
+        };
+
+
+        // Enhanced loading animation
+        const showLoading = () => {
+            outputTextContent.innerHTML = '<div class="loading"></div> <span style="margin-left: 10px;">थोड़ी देर रुके " YADAV Sir " आपके question का answer जरूर देगा ,  Wait for a while...</span>';
+            // Also update placeholder if needed
+            if (outputPlaceholder) {
+                outputPlaceholder.style.display = 'none';
+            }
+            favoriteOutputBtn.style.display = 'none'; // Hide favorite button during loading
+            downloadOutputPdfBtn.style.display = 'none'; // [नया] लोडिंग के दौरान PDF बटन छिपाएं
+        };
+
+        // Function to prepare input for a new query type
+        const prepareNewQuery = (type) => {
+            questionInput.value = '';
+            uploadedImageData = null;
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            outputTextContent.innerHTML = '<div id="outputPlaceholder">आपके उत्तर यहाँ दिखाई देंगे। ✨</div>';
+            speakerBtn.style.display = 'none'; // Hide speaker button on clear
+            favoriteOutputBtn.style.display = 'none'; // Hide favorite button on clear
+            downloadOutputPdfBtn.style.display = 'none'; // [नया] साफ़ करने पर PDF बटन छिपाएं
+            lastAnsweredQuestion = null;
+            lastAnsweredText = null;
+            lastAnsweredImageUsed = false;
+
+            mainMenuModal.classList.remove('show');
+            stopSpeaking();
+            
+            if (type === 'gk') {
+                questionInput.placeholder = '💡 सामान्य ज्ञान का प्रश्न पूछें (जैसे, "गुरुत्वाकर्षण की खोज किसने की?")';
+                outputTextContent.innerHTML = `<div id="outputPlaceholder">सामान्य ज्ञान के प्रश्न के लिए तैयार! बॉक्स में टाइप करें।</div>`;
+            } else if (type === 'math') {
+                questionInput.placeholder = '🔢 गणित की समस्या पूछें (जैसे, "2x + 5 = 11 हल करें")';
+                outputTextContent.innerHTML = `<div id="outputPlaceholder">गणित की समस्या के लिए तैयार! बॉक्स में टाइप करें।</div>`;
+            } else {
+                questionInput.placeholder = 'गणित की समस्या, सामान्य ज्ञान का प्रश्न, या कुछ भी पूछें!';
+                outputTextContent.innerHTML = '<div id="outputPlaceholder">आपके उत्तर यहाँ दिखाई देंगे। ✨</div>';
+            }
+            questionInput.focus();
+        };
+
+        // --- Event Listeners ---
+
+        // ###############################################################
+        // ##  यह capturePhoto फंक्शन बदल दी गयी है                  ##
+        // ###############################################################
+        const capturePhoto = () => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = cameraVideo.videoWidth;
+            canvas.height = cameraVideo.videoHeight;
+            
+            context.drawImage(cameraVideo, 0, 0, canvas.width, canvas.height);
+            
+            const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+            
+            stopCamera(); // कैमरा बंद करें
+            startCropper(dataURL); // और क्रॉप modal शुरू करें
+        };
+
+
+        // Camera button
+        cameraBtn.addEventListener('click', startCamera);
+
+        // Camera controls
+        captureBtn.addEventListener('click', capturePhoto);
+        closeCameraBtn.addEventListener('click', stopCamera);
+        switchCameraBtn.addEventListener('click', switchCamera);
+        flashBtn.addEventListener('click', toggleFlash);
+
+        // Close camera modal when clicking outside
+        cameraModal.addEventListener('click', (e) => {
+            if (e.target === cameraModal) {
+                stopCamera();
+            }
         });
 
-        document.getElementById('appDescription').addEventListener('input', function(e) {
-            appData.description = e.target.value;
-            document.getElementById('appDescPreview').textContent = e.target.value || 'App Description';
+        // Microphone button
+        micBtn.addEventListener('click', () => {
+            if (!recognition) return;
+
+            micBtn.disabled = true;
+            micBtn.style.background = '#ffd700';
+            micBtn.querySelector('i').classList.add('fa-beat');
+            stopSpeaking();
+            speakerBtn.style.display = 'none';
+            favoriteOutputBtn.style.display = 'none'; // Hide favorite button during mic input
+            downloadOutputPdfBtn.style.display = 'none'; // [नया] माइक इनपुट के दौरान PDF बटन छिपाएं
+
+
+            recognition.start();
+            outputTextContent.innerHTML = '🔊 सुन रहा है... कृपया अपना प्रश्न बोलें।';
+            questionInput.placeholder = 'सुन रहा है...';
         });
 
-        document.getElementById('appUrl').addEventListener('input', function(e) {
-            appData.url = e.target.value;
-        });
+        if (recognition) {
+            recognition.onresult = (event) => {
+                const speechResult = event.results[0][0].transcript;
+                questionInput.value = speechResult;
+                outputTextContent.innerHTML = '<div id="outputPlaceholder">🔊 भाषण पहचाना गया। उत्तर पाने के लिए भेजें पर क्लिक करें।</div>';
+            };
 
-        document.getElementById('appCategory').addEventListener('change', function(e) {
-            appData.category = e.target.value;
-        });
+            recognition.onend = () => {
+                micBtn.disabled = false;
+                micBtn.style.background = '';
+                micBtn.querySelector('i').classList.remove('fa-beat');
+                questionInput.placeholder = 'गणित की समस्या, सामान्य ज्ञान का प्रश्न, या कुछ भी पूछें!';
+            };
 
-        // Logo upload
-        document.getElementById('appLogo').addEventListener('change', function(e) {
-            const file = e.target.files[0];
+            recognition.onerror = (event) => {
+                console.error('भाषण पहचान त्रुटि:', event.error);
+                outputTextContent.innerHTML = `🔊 भाषण पहचान त्रुटि: ${event.error}. कृपया पुनः प्रयास करें।`;
+                micBtn.disabled = false;
+                micBtn.style.background = '';
+                micBtn.querySelector('i').classList.remove('fa-beat');
+            };
+        }
+
+        // ###############################################################
+        // ##  यह imageInput का इवेंट लिस्नर भी बदल दिया गया है       ##
+        // ###############################################################
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    appData.logo = e.target.result;
-                    document.getElementById('logoPreview').innerHTML = `<img src="${e.target.result}" alt="Logo">`;
-                    document.getElementById('logoPreview').classList.remove('empty');
-                    document.getElementById('appIcon').innerHTML = `<img src="${e.target.result}" alt="App Icon">`;
+                reader.onloadend = () => {
+                    startCropper(reader.result); // फाइल लोड होने पर सीधे क्रॉप modal शुरू करें
                 };
                 reader.readAsDataURL(file);
             }
         });
 
-        // Color updates
-        document.getElementById('primaryColor').addEventListener('change', function(e) {
-            appData.colors.primary = e.target.value;
-            document.getElementById('appBtnPreview').style.background = 
-                `linear-gradient(45deg, ${e.target.value}, ${e.target.value}dd)`;
-        });
 
-        document.getElementById('backgroundColor').addEventListener('change', function(e) {
-            appData.colors.background = e.target.value;
-            document.getElementById('phoneScreen').style.setProperty('--app-bg-color', e.target.value);
-        });
+        // ###############################################################
+        // ##  क्रॉप Modal के बटनों के लिए नए इवेंट लिस्नर             ##
+        // ###############################################################
+        cropImageBtn.addEventListener('click', () => {
+            if (!cropper) return;
 
-        document.getElementById('textColor').addEventListener('change', function(e) {
-            appData.colors.text = e.target.value;
-            document.getElementById('phoneScreen').style.setProperty('--app-text-color', e.target.value);
-        });
-
-        // Generate button functionality
-        document.getElementById('generateBtn').addEventListener('click', function() {
-            const appName = document.getElementById('appName').value;
-            const appDescription = document.getElementById('appDescription').value;
-            const appUrl = document.getElementById('appUrl').value;
+            // क्रॉप की हुई इमेज का canvas प्राप्त करें
+            const croppedCanvas = cropper.getCroppedCanvas({
+                width: 1024, // बेहतर प्रदर्शन के लिए आकार बदलें
+                fillColor: '#fff',
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
             
-            if (!appName || !appDescription || !appUrl) {
-                alert('कृपया app का नाम, विवरण और URL भरें');
+            const croppedDataUrl = croppedCanvas.toDataURL('image/jpeg', 0.9);
+
+            // मुख्य स्क्रीन पर क्रॉप की हुई इमेज दिखाएं
+            imagePreview.src = croppedDataUrl;
+            imagePreview.style.display = 'block';
+
+            // क्रॉप की हुई इमेज का डेटा AI को भेजने के लिए सहेजें
+            uploadedImageData = {
+                mimeType: 'image/jpeg',
+                data: croppedDataUrl.split(',')[1]
+            };
+
+            questionInput.placeholder = `🖼️ इमेज क्रॉप हो गयी! अब सवाल पूछें।`;
+            outputTextContent.innerHTML = `<div id="outputPlaceholder">🖼️ इमेज तैयार है। अब अपना सवाल भेजें।</div>`;
+
+            // क्रॉप modal को साफ और बंद करें
+            cropper.destroy();
+            cropper = null;
+            cropperModal.classList.remove('show');
+            imageInput.value = ''; // इनपुट को रीसेट करें ताकि वही फाइल दोबारा चुनी जा सके
+        });
+
+        cancelCropBtn.addEventListener('click', () => {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            cropperModal.classList.remove('show');
+            imageInput.value = ''; // इनपुट को रीसेट करें
+        });
+
+        // Clear Input Button
+        clearInputBtn.addEventListener('click', () => {
+            prepareNewQuery('general');
+            imageInput.value = '';
+            stopSpeaking();
+            speakerBtn.style.display = 'none';
+            favoriteOutputBtn.style.display = 'none';
+            downloadOutputPdfBtn.style.display = 'none'; // [नया]
+        });
+
+        // Send/Get Answer Button
+        sendBtn.addEventListener('click', async () => {
+            const textQuestion = questionInput.value.trim();
+
+            if (!textQuestion && !uploadedImageData) {
+                outputTextContent.innerHTML = '<div id="outputPlaceholder">💡 कृपया शुरू करने के लिए एक प्रश्न टाइप करें या एक छवि अपलोड करें!</div>';
                 return;
             }
-            
-            appData.name = appName;
-            appData.description = appDescription;
-            appData.url = appUrl;
-            
-            // Show loading screen
-            document.getElementById('loadingSection').classList.remove('hidden');
-            
-            // Simulate processing time
-            setTimeout(() => {
-                // Hide loading screen
-                document.getElementById('loadingSection').classList.add('hidden');
-                
-                // Generate QR code
-                generateQRCode();
-                
-                // Set download links
-                document.getElementById('downloadApk').onclick = downloadAPK;
-                document.getElementById('downloadPwa').onclick = downloadPWA;
-                document.getElementById('downloadQr').onclick = downloadQR;
-                
-                // Show output section
-                document.getElementById('outputSection').classList.remove('hidden');
-            }, 2000);
+
+            showLoading();
+            setInteractionState(true);
+            stopSpeaking();
+            speakerBtn.style.display = 'none';
+            favoriteOutputBtn.style.display = 'none'; // Hide favorite button before new answer
+            downloadOutputPdfBtn.style.display = 'none'; // [नया] नए उत्तर से पहले PDF बटन छिपाएं
+
+            try {
+                const answer = await performAIQuery(textQuestion, uploadedImageData);
+                outputTextContent.innerHTML = answer.replace(/\n/g, '<br>');
+
+                const isNotError = !answer.startsWith("API त्रुटि:") && !answer.startsWith("नेटवर्क त्रुटि:") && !answer.startsWith("त्रुटि:") && !answer.startsWith("सामग्री सुरक्षा फ़िल्टर द्वारा अवरुद्ध:");
+
+                if (isNotError) {
+                    const newEntry = addToHistory(textQuestion, answer, !!uploadedImageData);
+                    lastAnsweredQuestion = newEntry.question;
+                    lastAnsweredText = newEntry.answer;
+                    lastAnsweredImageUsed = newEntry.imageUsed;
+
+                    // Show speaker and favorite buttons only if a valid answer is returned
+                    if ('speechSynthesis' in window && selectedTTSVoice) {
+                        speakerBtn.style.display = 'flex';
+                        speakerBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        speakerBtn.classList.remove('playing');
+                    }
+                    favoriteOutputBtn.style.display = 'flex';
+                    favoriteOutputBtn.innerHTML = '<i class="far fa-heart"></i>'; // Default to empty heart
+                    favoriteOutputBtn.classList.remove('favorited'); // Ensure it's not marked as favorited by default
+                    
+                    downloadOutputPdfBtn.style.display = 'flex'; // [नया] उत्तर आने पर PDF बटन दिखाएं
+
+                    // Check if this answer is already in favorites and update button
+                    if (isFavorited(newEntry)) {
+                        favoriteOutputBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                        favoriteOutputBtn.classList.add('favorited');
+                    }
+                } else {
+                    speakerBtn.style.display = 'none';
+                    favoriteOutputBtn.style.display = 'none';
+                    downloadOutputPdfBtn.style.display = 'none'; // [नया] त्रुटि होने पर PDF बटन छिपाएं
+                    lastAnsweredQuestion = null; // Reset last answer on error
+                    lastAnsweredText = null;
+                    lastAnsweredImageUsed = false;
+                }
+
+            } finally {
+                setInteractionState(false);
+            }
         });
 
-        // QR Code generator
-        function generateQRCode() {
-            const canvas = document.getElementById('qrCanvas');
-            const ctx = canvas.getContext('2d');
-            const size = 200;
-            
-            // Clear canvas
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, size, size);
-            
-            // Generate QR pattern
-            ctx.fillStyle = '#000000';
-            for (let i = 0; i < 200; i += 10) {
-                for (let j = 0; j < 200; j += 10) {
-                    if (Math.random() > 0.5) {
-                        ctx.fillRect(i, j, 8, 8);
-                    }
+        // --- Main Speaker Button Click Handler ---
+        speakerBtn.addEventListener('click', () => {
+            const answerText = outputTextContent.innerText.trim(); 
+            if (isSpeaking) {
+                stopSpeaking();
+            } else {
+                if (answerText && answerText !== outputPlaceholder.innerText.trim()) { 
+                    speakAnswer(answerText, speakerBtn);
+                } else {
+                    console.warn('मुख्य आउटपुट से बोलने के लिए कोई उत्तर सामग्री नहीं है।');
+                    alert('कोई उत्तर नहीं है जिसे सुना जा सके।');
                 }
             }
-            
-            // Add logo in center
-            if (appData.logo) {
-                const img = new Image();
-                img.src = appData.logo;
-                img.onload = function() {
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(85, 85, 30, 30);
-                    ctx.drawImage(img, 87, 87, 26, 26);
+        });
+
+        // --- Favorite Output Button Click Handler (New) ---
+        favoriteOutputBtn.addEventListener('click', () => {
+            if (lastAnsweredQuestion && lastAnsweredText) {
+                const entry = {
+                    question: lastAnsweredQuestion,
+                    answer: lastAnsweredText,
+                    imageUsed: lastAnsweredImageUsed,
+                    timestamp: new Date().toLocaleString() // Use current time for favorited time
                 };
+
+                if (isFavorited(entry)) {
+                    // If already favorited, remove it
+                    if (removeFromFavorites(entry)) {
+                        favoriteOutputBtn.innerHTML = '<i class="far fa-heart"></i>'; // Empty heart
+                        favoriteOutputBtn.classList.remove('favorited');
+                        alert('पसंदीदा से हटाया गया!');
+                    } else {
+                        alert('पसंदीदा से हटाते समय त्रुटि हुई।');
+                    }
+                } else {
+                    // If not favorited, add it
+                    if (addToFavorites(entry)) {
+                        favoriteOutputBtn.innerHTML = '<i class="fas fa-heart"></i>'; // Filled heart
+                        favoriteOutputBtn.classList.add('favorited');
+                        alert('पसंदीदा में जोड़ा गया!');
+                    } else {
+                        alert('यह आइटम पहले से ही पसंदीदा में है!');
+                    }
+                }
+                displayFavorites(); // Refresh favorites list if modal is open
+                displayHistory(); // Refresh history list to update heart icons
+            } else {
+                alert('पसंदीदा में जोड़ने के लिए कोई उत्तर नहीं है।');
             }
-        }
+        });
 
-        // Create APK file
-        function downloadAPK(e) {
-            e.preventDefault();
-            const apkContent = `
-APK Package Information
-=======================
 
-App Name: ${appData.name}
-Package Name: com.appmaker.${appData.name.toLowerCase().replace(/\s+/g, '')}
-Version: 1.0.0
-Build: 1
-Category: ${appData.category}
+        // --- Share Result Button Logic ---
+        shareResultBtn.addEventListener('click', async () => {
+            const currentQuestion = questionInput.value.trim();
+            const currentAnswer = outputTextContent.querySelector('#outputPlaceholder') ? '' : outputTextContent.innerText.trim();
 
-App Details:
-- Description: ${appData.description}
-- Target URL: ${appData.url}
-- Primary Color: ${appData.colors.primary}
-- Background Color: ${appData.colors.background}
-- Text Color: ${appData.colors.text}
+            if (!currentQuestion && !uploadedImageData && currentAnswer === '') {
+                alert('कृपया पहले एक प्रश्न पूछें और उत्तर प्राप्त करें, फिर साझा करें।');
+                return;
+            }
 
-Technical Information:
-- Min SDK Version: 21 (Android 5.0)
-- Target SDK Version: 34 (Android 14)
-- Architecture: arm64-v8a, armeabi-v7a
-- Permissions: INTERNET, ACCESS_NETWORK_STATE
+            const shareText = `${APP_NAME}\n\n` +
+                               `प्रश्न: ${currentQuestion || (uploadedImageData ? 'छवि-आधारित प्रश्न' : 'कोई प्रश्न नहीं')}\n\n` +
+                               `उत्तर: ${currentAnswer || 'कोई उत्तर उपलब्ध नहीं'}\n\n` +
+                               `इस AI ऐप से अपनी समस्याओं का समाधान पाएं: ${APP_URL}`;
 
-Build Information:
-- Generated: ${new Date().toLocaleString()}
-- Build Tool: App Maker Professional v2.0
-- Compiler: WebView Container
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `${APP_NAME} परिणाम`,
+                        text: shareText,
+                        url: APP_URL
+                    });
+                    console.log('सामग्री सफलतापूर्वक साझा की गई!');
+                } catch (error) {
+                    console.error('साझा करने में त्रुटि:', error);
+                    if (error.name !== 'AbortError') {
+                        alert(`साझा करने में असमर्थ: ${error.message}`);
+                    }
+                }
+            } else {
+                alert('आपका ब्राउज़र सीधे साझा करने का समर्थन नहीं करता है। यहाँ पाठ है:\n\n' + shareText);
+            }
+        });
 
-Installation Instructions:
-1. Download this APK file
-2. Enable "Install from Unknown Sources" in Android Settings
-3. Tap the APK file to install
-4. Grant necessary permissions
-5. Launch app from home screen
 
-Note: This is a WebView-based APK that opens your website/web app
-in a native Android container with offline capabilities.
+        // --- Main Menu Logic ---
+        menuBtn.addEventListener('click', () => {
+            mainMenuModal.classList.add('show');
+            stopSpeaking();
+        });
 
-Developer: App Maker Professional
-Website: https://appmaker.pro
-Support: support@appmaker.pro
+        closeMainMenuBtn.addEventListener('click', () => {
+            mainMenuModal.classList.remove('show');
+        });
 
-© 2024 App Maker Professional. All rights reserved.
+        mainMenuModal.addEventListener('click', (e) => {
+            if (e.target === mainMenuModal) {
+                mainMenuModal.classList.remove('show');
+            }
+        });
+
+        // Link History from Main Menu button
+        openHistoryBtn.addEventListener('click', () => {
+            mainMenuModal.classList.remove('show');
+            stopSpeaking();
+            displayHistory(); // Important: call displayHistory to refresh the list with speaker buttons
+            historyModal.classList.add('show');
+        });
+
+        // Download App (PWA) button
+        downloadAppBtn.addEventListener('click', () => {
+            alert("यह एक वेब एप्लिकेशन है! इसे 'डाउनलोड' करने के लिए, अपने ब्राउज़र के 'होम स्क्रीन पर जोड़ें' या 'ऐप इंस्टॉल करें' सुविधा का उपयोग करें।");
+            mainMenuModal.classList.remove('show');
+        });
+
+        // New Share App Button Logic
+        shareAppBtn.addEventListener('click', async () => {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: APP_NAME,
+                        text: 'गणित और रिजनिंग, सामान्य ज्ञान के सवालों के झटपट जवाब पाएं इस YADAV Sir AI Math & GK Solver ऐप से!',
+                        url: APP_URL
+                    });
+                    console.log('ऐप सफलतापूर्वक साझा किया गया!');
+                } catch (error) {
+                    console.error('ऐप साझा करने में त्रुटि:', error);
+                    if (error.name !== 'AbortError') {
+                        alert(`ऐप साझा करने में असमर्थ: ${error.message}`);
+                    }
+                }
+            } else {
+                alert('आपका ब्राउज़र सीधे साझा करने का समर्थन नहीं करता है। ऐप का URL यहाँ है:\n\n' + APP_URL + '\n\nइसे मैन्युअल रूप से कॉपी करें और साझा करें।');
+            }
+            mainMenuModal.classList.remove('show');
+        });
+
+        // New GK Question button
+        newGkQuestionBtn.addEventListener('click', () => prepareNewQuery('gk'));
+
+        // New Math Problem button
+        newMathProblemBtn.addEventListener('click', () => prepareNewQuery('math'));
+
+        // --- New Menu Option Event Listeners ---
+        rateAppBtn.addEventListener('click', () => {
+            alert('इस ऐप को रेटिंग देने के लिए धन्यवाद! कृपया ऐप स्टोर पर जाएँ।');
+            // In a real app, you would redirect to your app's store page here
+            // window.open('https://play.google.com/store/apps/details?id=your.app.package', '_blank');
+            mainMenuModal.classList.remove('show');
+        });
+
+        privacyPolicyBtn.addEventListener('click', () => {
+            window.open('https://yadavsir.vercel.app/privacy-policy.html', '_blank'); // Add your actual privacy policy URL here
+            mainMenuModal.classList.remove('show');
+        });
+
+        // --- Settings Modal Logic ---
+        settingsBtn.addEventListener('click', () => {
+            mainMenuModal.classList.remove('show');
+            stopSpeaking();
+            settingsModal.classList.add('show');
+            applySettings(); // Ensure settings are reflected when opening modal
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('show');
+        });
+
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) {
+                settingsModal.classList.remove('show');
+            }
+        });
+
+        // Language selection handler
+        languageSelect.addEventListener('change', (e) => {
+            appSettings.language = e.target.value;
+            saveSettings();
+            loadVoices(); // Reload voices to match new language preference
+            alert(`भाषा "${e.target.options[e.target.selectedIndex].text}" में सेट कर दी गई है।`);
+        });
+
+        // Text size selection handler
+        textSizeOptions.addEventListener('change', (e) => {
+            if (e.target.name === 'textSize') {
+                appSettings.textSize = e.target.value;
+                saveSettings();
+                applySettings(); // Apply new text size immediately
+                alert(`टेक्स्ट आकार ${e.target.value} पर सेट कर दिया गया है।`);
+            }
+        });
+
+        // Remove Ads button handler
+        removeAdsBtn.addEventListener('click', () => {
+            if (appSettings.isAdFree) {
+                alert('आप पहले से ही विज्ञापन-मुक्त अनुभव का आनंद ले रहे हैं!');
+                return;
+            }
+            const confirmPurchase = confirm('यह सुविधा आपको ₹49 के एक बार के भुगतान पर विज्ञापन-मुक्त अनुभव प्रदान करती है। क्या आप जारी रखना चाहते हैं? (यह एक डेमो है, कोई वास्तविक भुगतान नहीं होगा)');
+            if (confirmPurchase) {
+                // Simulate successful payment
+                appSettings.isAdFree = true;
+                saveSettings();
+                applySettings(); // Hide ads and update button
+                alert('धन्यवाद! अब आप विज्ञापन-मुक्त अनुभव का आनंद लेंगे।');
+                settingsModal.classList.remove('show'); // Close settings after purchase
+            } else {
+                alert('विज्ञापन-मुक्त अनुभव रद्द कर दिया गया।');
+            }
+        });
+
+        // --- History Modal Logic ---
+        closeHistoryBtn.addEventListener('click', () => {
+            historyModal.classList.remove('show');
+            stopSpeaking();
+        });
+
+        // Close history modal when clicking outside
+        historyModal.addEventListener('click', (e) => {
+            if (e.target === historyModal) {
+                historyModal.classList.remove('show');
+                stopSpeaking();
+            }
+        });
+
+        // --- PDF Download All History Logic (IMPROVED) ---
+        downloadHistoryPdfBtn.addEventListener('click', async () => {
+            if (history.length === 0) {
+                alert('डाउनलोड करने के लिए कोई इतिहास उपलब्ध नहीं है।');
+                return;
+            }
+            stopSpeaking();
+
+            const historyModalContent = historyModal.querySelector('.modal-content');
+            const originalContent = historyModalContent.innerHTML;
+            historyModalContent.innerHTML = `
+                <div style="text-align: center; padding: 50px;">
+                    <div class="loading" style="width: 40px; height: 40px; border-width: 5px; margin: 0 auto 20px; border-top-color: #667eea;"></div>
+                    <p style="color: #667eea; font-size: 1.2em;">PDF तैयार हो रही है... कृपया प्रतीक्षा करें। यह इतिहास की लंबाई के आधार पर कुछ समय ले सकता है।</p>
+                </div>
             `;
-            
-            const blob = new Blob([apkContent], { type: 'application/vnd.android.package-archive' });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${appData.name.replace(/\s+/g, '_')}.apk`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
+            document.querySelectorAll('#historyModal button').forEach(btn => btn.disabled = true);
 
-        // Create PWA files
-        function downloadPWA(e) {
-            e.preventDefault();
-            const pwaContent = `
-<!DOCTYPE html>
-<html lang="hi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${appData.name}</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="${appData.colors.primary}">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: ${appData.colors.background};
-            color: ${appData.colors.text};
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
+            setTimeout(async () => {
+                try {
+                    const tempDiv = document.createElement('div');
+                    
+                    let historyContentHtml = `
+                        <style>
+                            body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.6; color: #333; }
+                            .pdf-history-item { 
+                                page-break-inside: avoid !important; 
+                                margin-bottom: 25px; 
+                                padding: 20px; 
+                                border: 1px solid #ddd; 
+                                border-radius: 10px; 
+                                background-color: #f9f9f9;
+                            }
+                            h1, h3 { color: #667eea; }
+                            h1 { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #764ba2; padding-bottom: 10px; }
+                            h3 { margin-top: 0; margin-bottom: 10px; color: #764ba2; }
+                            p { margin-top: 0; margin-bottom: 10px; word-wrap: break-word; white-space: pre-wrap; }
+                            small { display: block; text-align: right; color: #777; font-size: 0.8em; }
+                            .pdf-footer { text-align: center; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; font-size: 0.8em; color: #999; }
+                            a { color: #667eea; text-decoration: none; }
+                        </style>
+                        <h1>${APP_NAME} - उत्तर इतिहास</h1>
+                    `;
+
+                    [...history].reverse().forEach((entry, index) => {
+                        const questionDisplay = entry.question || (entry.imageUsed ? 'छवि-आधारित प्रश्न' : 'कोई प्रश्न नहीं');
+                        historyContentHtml += `
+                            <div class="pdf-history-item">
+                                <h3>प्रश्न ${index + 1}:</h3>
+                                <p>${questionDisplay.replace(/\n/g, '<br>')}</p>
+                                <h3>उत्तर:</h3>
+                                <p>${entry.answer.replace(/\n/g, '<br>')}</p>
+                                <small>तिथि: ${entry.timestamp}</small>
+                            </div>
+                        `;
+                    });
+
+                    historyContentHtml += `
+                        <div class="pdf-footer">
+                            <p>© ${new Date().getFullYear()} ${APP_NAME}</p>
+                            <p><a href="${APP_URL}" target="_blank">AI Solver से और प्रश्न पूछें</a></p>
+                        </div>
+                    `;
+                    tempDiv.innerHTML = historyContentHtml;
+
+                    const opt = {
+                        margin:       [0.5, 0.5, 0.5, 0.5],
+                        filename:     'YADAV_Sir_AI_Solver_All_History.pdf',
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, logging: false, dpi: 192, letterRendering: true, useCORS: true },
+                        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+                        pagebreak:    { mode: 'css', before: '.pdf-history-item' }
+                    };
+
+                    await html2pdf().from(tempDiv).set(opt).save();
+                    console.log('सभी इतिहास PDF सफलतापूर्वक डाउनलोड हुआ!');
+
+                } catch (error) {
+                    console.error('PDF जनरेशन विफल हुआ:', error);
+                    alert('PDF जनरेशन में त्रुटि हुई। कृपया पुनः प्रयास करें।');
+                } finally {
+                    historyModalContent.innerHTML = originalContent;
+                    displayHistory();
+                }
+            }, 100);
+        });
+
+        // --- Favorites Modal Logic (New) ---
+        openFavoritesBtn.addEventListener('click', () => {
+            mainMenuModal.classList.remove('show');
+            stopSpeaking();
+            displayFavorites(); // Display current favorites
+            favoritesModal.classList.add('show');
+        });
+
+        closeFavoritesBtn.addEventListener('click', () => {
+            favoritesModal.classList.remove('show');
+            stopSpeaking();
+        });
+
+        favoritesModal.addEventListener('click', (e) => {
+            if (e.target === favoritesModal) {
+                favoritesModal.classList.remove('show');
+                stopSpeaking();
+            }
+        });
+
+        // [नया] मुख्य आउटपुट से सीधे PDF डाउनलोड करने के लिए इवेंट लिसनर
+        downloadOutputPdfBtn.addEventListener('click', () => {
+            stopSpeaking(); // किसी भी चल रही स्पीच को रोकें
+
+            // जांचें कि क्या डाउनलोड करने के लिए कोई उत्तर है
+            if (lastAnsweredText) {
+                // generateSinglePdf फंक्शन को पास करने के लिए एक 'entry' ऑब्जेक्ट बनाएं
+                const currentEntry = {
+                    question: lastAnsweredQuestion || (lastAnsweredImageUsed ? 'छवि-आधारित प्रश्न' : 'कोई प्रश्न नहीं'),
+                    answer: lastAnsweredText,
+                    imageUsed: lastAnsweredImageUsed,
+                    timestamp: new Date().toLocaleString() // पीडीएफ के लिए वर्तमान समय का उपयोग करें
+                };
+
+                // मौजूदा PDF जनरेशन फंक्शन को कॉल करें
+                generateSinglePdf(currentEntry);
+            } else {
+                alert('डाउनलोड करने के लिए कोई उत्तर उपलब्ध नहीं है।');
+            }
+        });
+
+
+        // Initial setup: load history and display it
+        loadSettings(); // Load settings first
+        loadHistory();
+        loadFavorites(); // Load favorites on startup
+        displayHistory(); // Call once on load to show initial history
+    });
+
+let index = 0;
+    const slides = document.getElementById('slides');
+    const dotsContainer = document.getElementById('dots');
+    const totalSlides = slides.children.length;
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let autoSlideInterval;
+
+    // Create dots for navigation
+    for (let i = 0; i < totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (i === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => goToSlide(i));
+      dotsContainer.appendChild(dot);
+    }
+
+    // Initialize auto slide
+    startAutoSlide();
+
+    function goToSlide(slideIndex) {
+      index = slideIndex;
+      updateSlider();
+    }
+
+    function updateSlider() {
+      slides.style.transform = `translateX(-${index * 100}%)`;
+      
+      // Update active dot
+      const dots = document.querySelectorAll('.dot');
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+      });
+    }
+
+    function nextSlide() {
+      index = (index + 1) % totalSlides;
+      updateSlider();
+    }
+
+    function prevSlide() {
+      index = (index - 1 + totalSlides) % totalSlides;
+      updateSlider();
+    }
+
+    function startAutoSlide() {
+      autoSlideInterval = setInterval(nextSlide, 2000);
+    }
+
+    function stopAutoSlide() {
+      clearInterval(autoSlideInterval);
+    }
+
+    // Touch event handlers for swipe
+    slides.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      stopAutoSlide();
+    }, {passive: true});
+
+    slides.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+      startAutoSlide();
+    }, {passive: true});
+
+    function handleSwipe() {
+      const threshold = 50; // Minimum swipe distance
+      if (touchEndX < touchStartX - threshold) {
+        // Swipe left - next slide
+        nextSlide();
+      } else if (touchEndX > touchStartX + threshold) {
+        // Swipe right - previous slide
+        prevSlide();
+      }
+    }
+
+    // Mouse event handlers for desktop
+    slides.addEventListener('mousedown', (e) => {
+      touchStartX = e.clientX;
+      stopAutoSlide();
+    });
+
+    slides.addEventListener('mouseup', (e) => {
+      touchEndX = e.clientX;
+      handleSwipe();
+      startAutoSlide();
+    });
+
+    slides.addEventListener('mouseleave', () => {
+      startAutoSlide();
+    });
+
+    function installApp() {
+      window.location.href = "https://median.co/share/nokjya#apk"; // यहाँ अपने App का लिंक लगाएं
+    }
+
+
+  // Days and months in Hindi
+        const hindiDays = ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'];
+        const hindiMonths = [
+            'जनवरी', 'फरवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+            'जुलाई', 'अगस्त', 'सितम्बर', 'अक्टूबर', 'नवम्बर', 'दिसम्बर'
+        ];
+        
+        function updateTime() {
+            const now = new Date();
+            
+            // Update time (12-hour format)
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            
+            // Convert to 12-hour format
+            if (hours === 0) {
+                hours = 12;
+            } else if (hours > 12) {
+                hours = hours - 12;
+            }
+            
+            const displayHours = hours.toString().padStart(2, '0');
+            
+            document.getElementById('hours').textContent = displayHours;
+            document.getElementById('minutes').textContent = minutes;
+            
+            // Update date
+            const dayOfWeek = hindiDays[now.getDay()];
+            const date = now.getDate();
+            const month = hindiMonths[now.getMonth()];
+            const year = now.getFullYear();
+            
+            const dateString = `${dayOfWeek}, ${date} ${month}, ${year}`;
+            document.getElementById('date').textContent = dateString;
         }
-        .app-icon {
-            width: 120px;
-            height: 120px;
-            margin-bottom: 20px;
-            border-radius: 25px;
-            background: ${appData.colors.primary};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            color: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .app-title {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        .app-description {
-            font-size: 1.1rem;
-            margin-bottom: 30px;
-            max-width: 500px;
-            line-height: 1.6;
-        }
-        .launch-btn {
-            background: linear-gradient(45deg, ${appData.colors.primary}, ${appData.colors.primary}dd);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-    </style>
-</head>
-<body>
-    <div class="app-icon">
-        ${appData.logo ? `<img src="logo.png" alt="App Logo" width="120" height="120">` : '📱'}
-    </div>
-    <h1 class="app-title">${appData.name}</h1>
-    <p class="app-description">${appData.description}</p>
-    <button class="launch-btn" onclick="window.location.href='${appData.url}'">Launch App</button>
+        
+        // Update immediately and then every second
+        updateTime();
+        setInterval(updateTime, 1000);
+
+//gk//
+
+  const stateLinks = {
+      "उत्तर प्रदेश":     { link: "https://wa.me/XXXXXXXXXX?text=UP" },
+      "मध्यप्रदेश":       { link: "https://wa.me/XXXXXXXXXX?text=MP" },
+      "महाराष्ट्र":        { link: "https://wa.me/XXXXXXXXXX?text=MH" },
+      "बिहार":            { link: "https://wa.me/XXXXXXXXXX?text=BR" },
+      "पश्चिम बंगाल":     { link: "https://wa.me/XXXXXXXXXX?text=WB" },
+      "तमिलनाडु":         { link: "https://wa.me/XXXXXXXXXX?text=TN" },
+      "राजस्थान":         { link: "https://wa.me/XXXXXXXXXX?text=RJ" },
+      "कर्नाटक":          { link: "https://wa.me/XXXXXXXXXX?text=KA" },
+      "गुजरात":           { link: "https://wa.me/XXXXXXXXXX?text=GJ" },
+      "आंध्रप्रदेश":       { link: "https://wa.me/XXXXXXXXXX?text=AP" },
+      "तेलंगाना":         { link: "https://wa.me/XXXXXXXXXX?text=TG" },
+      "केरल":            { link: "https://wa.me/XXXXXXXXXX?text=KL" },
+      "ओडिशा":           { link: "https://wa.me/XXXXXXXXXX?text=OD" },
+      "जम्मू और कश्मीर": { link: "https://wa.me/XXXXXXXXXX?text=JK" },
+      "पंजाब":           { link: "https://wa.me/XXXXXXXXXX?text=PB" },
+      "हरियाणा":         { link: "https://wa.me/XXXXXXXXXX?text=HR" },
+      "असम":             { link: "https://wa.me/XXXXXXXXXX?text=AS" },
+      "झारखंड":          { link: "https://wa.me/XXXXXXXXXX?text=JH" },
+      "छत्तीसगढ़":       { link: "https://wa.me/XXXXXXXXXX?text=CT" },
+      "उत्तराखंड":        { link: "https://wa.me/XXXXXXXXXX?text=UT" },
+      "हिमाचलप्रदेश":     { link: "https://wa.me/XXXXXXXXXX?text=HP" },
+      "त्रिपुरा":         { link: "https://wa.me/XXXXXXXXXX?text=TR" },
+      "मेघालय":          { link: "https://wa.me/XXXXXXXXXX?text=ML" },
+      "मणिपुर":          { link: "https://wa.me/XXXXXXXXXX?text=MN" },
+      "मिजोरम":          { link: "https://wa.me/XXXXXXXXXX?text=MZ" },
+      "नागालैंड":         { link: "https://wa.me/XXXXXXXXXX?text=NL" },
+      "सिक्किम":          { link: "https://wa.me/XXXXXXXXXX?text=SK" },
+      "गोवा":             { link: "https://wa.me/XXXXXXXXXX?text=GA" },
+      "अरुणाचलप्रदेश":    { link: "https://wa.me/XXXXXXXXXX?text=AR" },
+      "दिल्ली":           { link: "https://wa.me/XXXXXXXXXX?text=DL" },
+      "पुदुचेरी":         { link: "https://wa.me/XXXXXXXXXX?text=PY" },
+      "चंडीगढ़":          { link: "https://wa.me/XXXXXXXXXX?text=CH" },
+      "अंडमान और निकोबार":{ link: "https://wa.me/XXXXXXXXXX?text=AN" },
+      "लक्षद्वीप":         { link: "https://wa.me/XXXXXXXXXX?text=LD" },
+      "दादरा और नगर हवेली और दमन और दीव": { link: "https://wa.me/XXXXXXXXXX?text=DN" },
+      "लद्दाख":           { link: "https://wa.me/XXXXXXXXXX?text=LA" }
+    };
+
+    const select = document.getElementById('states');
+    for (let state in stateLinks) {
+      let option = document.createElement('option');
+      option.value = state;
+      option.textContent = state;
+      select.appendChild(option);
+    }
+
+    function submitState() {
+      const value = select.value;
+      const msg = document.getElementById('msg');
+
+      if (stateLinks[value]) {
+        window.open(stateLinks[value].link, '_blank');
+        msg.style.display = 'block';
+      } else {
+     alert("राज्यो के सामान्य ज्ञान को पढ़ने के लिए अपना राज्य चुने  !");
+        msg.style.display = 'none';
+      }
+    }
+  </script>
 </body>
 </html>
-            `;
-            
-            const blob = new Blob([pwaContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `${appData.name.replace(/\s+/g, '_')}_pwa.html`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
 
-        // Download QR code
-        function downloadQR(e) {
-            e.preventDefault();
-            const canvas = document.getElementById('qrCanvas');
-            const dataUrl = canvas.toDataURL('image/png');
-            
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = `${appData.name.replace(/\s+/g, '_')}_qrcode.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    </script>
-</body>
-</html>
